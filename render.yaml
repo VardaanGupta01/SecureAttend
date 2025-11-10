@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: secureattend-backend
+    env: docker
+    plan: free
+    region: oregon
+    rootDir: backend/secureattend-backend
+    dockerfilePath: Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 8080
