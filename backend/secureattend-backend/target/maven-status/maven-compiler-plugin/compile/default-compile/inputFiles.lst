@@ -1,59 +1,59 @@
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\dto\VerificationResult.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\service\EnhancedAttendanceService.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\repository\SessionRepository.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\config\CorsConfig.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\domain\TA.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\service\LocationVerificationService.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\service\UserService.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\dto\CreateSessionRequest.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\exception\DuplicateAttendanceException.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\domain\Attendance.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\verification\FaceVerification.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\SecureAttendApplication.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\dto\InitiateAttendanceRequest.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\exception\FaceVerificationFailedException.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\verification\QrCodeVerification.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\dto\CreateTARequest.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\exception\LocationVerificationFailedException.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\domain\Professor.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\service\EnhancedSessionService.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\controller\ClassController.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\repository\AttendanceRepository.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\dto\UpdateProfilePictureRequest.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\controller\EnhancedStudentController.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\exception\SessionNotFoundException.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\exception\GlobalExceptionHandler.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\dto\SignupRequest.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\service\QRCodeGenerationService.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\repository\PersonRepository.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\domain\Session.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\verification\VerificationStrategy.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\exception\InvalidVerificationStepException.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\factory\CodeFactory.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\service\AuthService.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\dto\FaceVerificationRequest.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\verification\CodewordVerification.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\service\ClassService.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\controller\EnhancedProfessorController.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\service\FaceRecognitionService.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\controller\EnhancedTAController.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\dto\EnrollStudentRequest.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\dto\LoginRequest.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\dto\CreateClassRequest.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\exception\StudentNotEnrolledException.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\repository\CourseClassRepository.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\dto\UpdateSessionRequest.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\config\SecurityConfig.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\config\DataSeeder.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\controller\AuthController.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\domain\CourseClass.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\domain\Student.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\exception\InvalidQRCodeException.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\verification\LocationVerification.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\domain\Person.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\verification\VerificationInput.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\dto\AuthResponse.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\exception\SessionClosedException.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\dto\LocationVerificationRequest.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\exception\SecureAttendException.java
-C:\Users\parth\Desktop\D Drive\Sem 3\secure-attend\OOM_Project\backend\secureattend-backend\src\main\java\com\secureattend\dto\ApiResponse.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/exception/SecureAttendException.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/domain/Person.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/verification/FaceVerification.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/repository/AttendanceRepository.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/controller/EnhancedStudentController.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/dto/LoginRequest.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/dto/FaceVerificationRequest.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/service/UserService.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/controller/EnhancedProfessorController.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/domain/TA.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/exception/InvalidVerificationStepException.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/service/QRCodeGenerationService.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/service/EnhancedSessionService.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/config/SecurityConfig.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/dto/InitiateAttendanceRequest.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/controller/ClassController.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/exception/InvalidQRCodeException.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/dto/LocationVerificationRequest.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/exception/SessionClosedException.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/verification/VerificationStrategy.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/verification/VerificationInput.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/dto/CreateSessionRequest.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/dto/ApiResponse.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/dto/UpdateProfilePictureRequest.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/service/ClassService.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/dto/CreateClassRequest.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/dto/SignupRequest.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/dto/CreateTARequest.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/controller/AuthController.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/verification/LocationVerification.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/domain/Session.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/domain/Professor.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/verification/CodewordVerification.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/service/AuthService.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/dto/EnrollStudentRequest.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/service/FaceRecognitionService.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/config/CorsConfig.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/dto/VerificationResult.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/repository/CourseClassRepository.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/domain/Attendance.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/exception/GlobalExceptionHandler.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/factory/CodeFactory.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/repository/SessionRepository.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/controller/EnhancedTAController.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/domain/CourseClass.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/config/DataSeeder.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/verification/QrCodeVerification.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/exception/LocationVerificationFailedException.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/SecureAttendApplication.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/repository/PersonRepository.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/exception/SessionNotFoundException.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/service/EnhancedAttendanceService.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/service/LocationVerificationService.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/dto/UpdateSessionRequest.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/exception/DuplicateAttendanceException.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/dto/AuthResponse.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/exception/StudentNotEnrolledException.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/exception/FaceVerificationFailedException.java
+/Users/vardaangupta/OOM_Project/backend/secureattend-backend/src/main/java/com/secureattend/domain/Student.java

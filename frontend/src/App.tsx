@@ -10,7 +10,10 @@ import StudentPortal from './components/StudentPortal';
 import TADashboard from './components/TADashboard';
 import axios from 'axios';
 
-const API_BASE = 'https://secure-attend-backend.onrender.com/api';
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8080/api'
+  : 'https://secure-attend-backend.onrender.com/api';
+
 const api = axios.create({ baseURL: API_BASE });
 
 interface User {
@@ -106,7 +109,7 @@ const Login: React.FC = () => {
       console.error('Login error:', err);
       
       if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
-        setError('Cannot connect to server. Please make sure the backend is running on https://secure-attend-backend.onrender.com');
+        setError(`Cannot connect to server. Please make sure the backend is running on ${API_BASE}`);
       } else if (err.response) {
         const errorMessage = err.response?.data?.message || err.response?.data?.errorCode || 'Login failed';
         setError(errorMessage);

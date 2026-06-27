@@ -1,7 +1,9 @@
 import axios from 'axios'
 // https://secure-attend-backend.onrender.com
-// const API_BASE_URL = 'http://localhost:8080/api'
-const API_BASE_URL = 'https://secure-attend-backend.onrender.com/api'
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8080/api'
+  : 'https://secure-attend-backend.onrender.com/api';
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
