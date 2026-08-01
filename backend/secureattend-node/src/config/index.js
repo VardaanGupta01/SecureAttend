@@ -4,7 +4,9 @@ dotenv.config();
 export const config = {
   port: parseInt(process.env.PORT || '8080', 10),
   mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/secureattend',
-  corsOrigins: (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:3000').split(','),
+  corsOrigins: process.env.CORS_ORIGINS === '*'
+    ? '*'
+    : (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:3000').split(',').map((o) => o.trim()),
   geo: {
     defaultRadiusMeters: parseFloat(process.env.GEO_DEFAULT_RADIUS_METERS || '50'),
     defaultLat: parseFloat(process.env.GEO_DEFAULT_LAT || '25.4299'),
