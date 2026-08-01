@@ -10,6 +10,7 @@ export const API_BASE =
 export const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
+  timeout: 90000, // Render free tier can take ~60s to wake up
 });
 
 export default api;

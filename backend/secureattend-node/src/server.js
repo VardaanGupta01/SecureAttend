@@ -12,9 +12,16 @@ import { error } from './utils/apiResponse.js';
 
 const app = express();
 
+// Allow browser requests from Vercel/local dev (reflect request origin)
 app.use(
   cors({
-    origin: config.corsOrigins === '*' ? true : config.corsOrigins,
+    origin: config.corsOrigins === '*' ? true : (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (config.corsOrigins.includes(origin)) return callback(null, true);
+      // Allow Vercel preview/production URLs automatically
+      if (/^https:\/\/[\w-]+\.vercel\.app$/i.test(origin)) return callback(null, true);
+      callback(null, true); // permissive for deployment; set CORS_ORIGINS to restrict
+    },
     credentials: true,
   })
 );

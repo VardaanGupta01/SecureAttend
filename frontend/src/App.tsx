@@ -126,7 +126,11 @@ const Login: React.FC = () => {
     } catch (err: unknown) {
       const e = err as { code?: string; message?: string; response?: { data?: { message?: string } }; request?: unknown };
       if (e.code === 'ECONNREFUSED' || e.code === 'ERR_NETWORK' || e.message?.includes('Network Error')) {
-        setError(`Cannot connect to server at ${API_BASE}. Check that the backend is deployed and CORS is configured.`);
+        setError(
+          e.code === 'ECONNABORTED'
+            ? 'Server is waking up (Render free tier). Wait 30–60 seconds and try again.'
+            : `Cannot connect to ${API_BASE}. Redeploy backend on Render with latest code, set CORS_ORIGINS=*, and ensure MONGODB_URI is set.`
+        );
       } else if (e.response) {
         setError(e.response.data?.message || 'Login failed');
       } else if (e.request) {
