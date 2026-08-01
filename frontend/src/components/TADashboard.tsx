@@ -10,13 +10,7 @@ import {
   TrendingUp as TrendIcon, Flag as FlagIcon, Class as ClassIcon, Visibility,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:8080/api'
-  : 'https://secure-attend-backend.onrender.com/api';
-
-const api = axios.create({ baseURL: API_BASE_URL });
+import api from '../config/api';
 
 const getUser = () => {
   const stored = localStorage.getItem('user');

@@ -8,13 +8,7 @@ import {
   QrCodeScanner as QrIcon, LocationOn as LocationIcon, Face as FaceIcon,
   CheckCircle as CheckIcon, TrendingUp as TrendIcon,
 } from "@mui/icons-material";
-import axios from 'axios';
-
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:8080/api'
-  : 'https://secure-attend-backend.onrender.com/api';
-
-const api = axios.create({ baseURL: API_BASE_URL });
+import api from '../config/api';
 
 const QrScanner = React.lazy(() =>
   import("react-qr-scanner").then((mod: any) => ({
@@ -227,6 +221,13 @@ const StudentPortal: React.FC = () => {
       setMessage({ type: "error", text: "Location not available" });
       return;
     }
+    if (!wifiSsid.trim()) {
+      setMessage({
+        type: "error",
+        text: "Enter your Wi-Fi network name (SSID). Browsers cannot detect it automatically — ask your professor for the exact name shown in the session.",
+      });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -357,7 +358,7 @@ const StudentPortal: React.FC = () => {
         return (
           <Box>
             <Typography variant="body1" gutterBottom>
-              Verify your location to ensure you're in the classroom.
+              Verify your location to ensure you&apos;re in the classroom.
             </Typography>
             <Paper sx={{ p: 2, bgcolor: 'grey.50', mt: 2 }}>
               <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -369,15 +370,23 @@ const StudentPortal: React.FC = () => {
               <Typography variant="body2">
                 Longitude: {longitude?.toFixed(6)}
               </Typography>
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                Wi-Fi: {wifiSsid || "Not detected"}
-              </Typography>
             </Paper>
+            <TextField
+              fullWidth
+              required
+              label="Wi-Fi Network Name (SSID)"
+              value={wifiSsid}
+              onChange={(e) => setWifiSsid(e.target.value)}
+              placeholder="e.g., Campus-WiFi"
+              helperText="Type the exact Wi-Fi name your professor set for this session (must match exactly)"
+              sx={{ mt: 2 }}
+              variant="outlined"
+            />
             <Button
               fullWidth
               variant="contained"
               onClick={proceedToNextStep}
-              disabled={loading}
+              disabled={loading || !wifiSsid.trim()}
               startIcon={<LocationIcon />}
               sx={{ mt: 2 }}
             >
@@ -572,11 +581,11 @@ const StudentPortal: React.FC = () => {
 
               <TextField
                 fullWidth
-                label="Wi-Fi SSID (Optional)"
+                label="Wi-Fi Network Name (SSID)"
                 value={wifiSsid}
                 onChange={(e) => setWifiSsid(e.target.value)}
                 placeholder="e.g., Campus-WiFi"
-                helperText="Enter if WiFi verification is required"
+                helperText="Required if professor enabled WiFi check — enter the exact network name"
                 sx={{ mb: 3 }}
                 variant="outlined"
               />

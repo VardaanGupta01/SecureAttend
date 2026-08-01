@@ -4,9 +4,11 @@ services:
     env: docker
     plan: free
     region: oregon
-    rootDir: backend/secureattend-backend/
+    rootDir: backend/secureattend-node/
     dockerfilePath: ./Dockerfile
     autoDeploy: true
     envVars:
       - key: PORT
         value: 8080
+      - key: MONGODB_URI
+        sync: false

@@ -1,22 +1,12 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import {
-  Box, Container, AppBar, Toolbar, Typography, Button, Card, CardContent,
-  TextField, Tabs, Tab, Alert, Link, IconButton, Menu, MenuItem, InputAdornment
-} from '@mui/material';
-import { AccountCircle, ExitToApp, Email, Lock, School, Person, Badge } from '@mui/icons-material';
+import { School, User, Badge, Mail, Lock, LogOut, Menu as MenuIcon } from 'lucide-react';
 import ProfessorDashboard from './components/ProfessorDashboard';
 import StudentPortal from './components/StudentPortal';
 import TADashboard from './components/TADashboard';
-import axios from 'axios';
+import api from './config/api';
 
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:8080/api'
-  : 'https://secure-attend-backend.onrender.com/api';
-
-const api = axios.create({ baseURL: API_BASE });
-
-interface User {
+interface UserData {
   userId: string;
   name: string;
   role: 'PROFESSOR' | 'STUDENT' | 'TA';
@@ -25,8 +15,8 @@ interface User {
 }
 
 interface AuthContextType {
-  user: User | null;
-  login: (userData: User) => void;
+  user: UserData | null;
+  login: (userData: UserData) => void;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -34,14 +24,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserData | null>(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
 
-  useEffect(() => {
-    const stored = localStorage.getItem('user');
-    if (stored) setUser(JSON.parse(stored));
-  }, []);
-
-  const login = (userData: User) => {
+  const login = (userData: UserData) => {
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
   };
@@ -74,6 +66,27 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string
   return <>{children}</>;
 };
 
+const InputField: React.FC<{
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (v: string) => void;
+  icon?: React.ReactNode;
+}> = ({ label, type = 'text', value, onChange, icon }) => (
+  <div className="mb-4">
+    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+    <div className="relative">
+      {icon && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-500">{icon}</span>}
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full rounded-lg border border-gray-300 py-2.5 ${icon ? 'pl-10 pr-4' : 'px-4'} focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition`}
+      />
+    </div>
+  </div>
+);
+
 const Login: React.FC = () => {
   const [tab, setTab] = useState(0);
   const [username, setUsername] = useState('');
@@ -83,6 +96,12 @@ const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const tabs = [
+    { label: 'Professor', icon: <User size={18} /> },
+    { label: 'Student', icon: <School size={18} /> },
+    { label: 'TA', icon: <Badge size={18} /> },
+  ];
+
   const handleLogin = async () => {
     setError('');
     setLoading(true);
@@ -90,33 +109,30 @@ const Login: React.FC = () => {
       const endpoints = ['/auth/professor/login', '/auth/student/login', '/auth/ta/login'];
       const paths = ['/professor', '/student', '/ta'];
       const res = await api.post(endpoints[tab], { username, password });
-      
-      if (res.data && res.data.data) {
+
+      if (res.data?.data) {
         const authData = res.data.data;
-        const userData: User = {
+        login({
           userId: authData.userId,
           name: authData.name,
-          role: authData.role as 'PROFESSOR' | 'STUDENT' | 'TA',
+          role: authData.role,
           email: authData.email,
-          token: authData.token
-        };
-        login(userData);
+          token: authData.token,
+        });
         navigate(paths[tab]);
       } else {
         setError('Invalid response from server');
       }
-    } catch (err: any) {
-      console.error('Login error:', err);
-      
-      if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
-        setError(`Cannot connect to server. Please make sure the backend is running on ${API_BASE}`);
-      } else if (err.response) {
-        const errorMessage = err.response?.data?.message || err.response?.data?.errorCode || 'Login failed';
-        setError(errorMessage);
-      } else if (err.request) {
+    } catch (err: unknown) {
+      const e = err as { code?: string; message?: string; response?: { data?: { message?: string } }; request?: unknown };
+      if (e.code === 'ECONNREFUSED' || e.code === 'ERR_NETWORK' || e.message?.includes('Network Error')) {
+        setError('Cannot connect to server. Make sure the backend is running on port 8080.');
+      } else if (e.response) {
+        setError(e.response.data?.message || 'Login failed');
+      } else if (e.request) {
         setError('No response from server. Please check if the backend is running.');
       } else {
-        setError(err.message || 'Login failed. Please try again.');
+        setError(e.message || 'Login failed. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -124,173 +140,66 @@ const Login: React.FC = () => {
   };
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-      position: 'relative',
-      overflow: 'hidden',
-      '&::before': {
-        content: '""',
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%)',
-        animation: 'pulse 4s ease-in-out infinite',
-      },
-      '@keyframes pulse': {
-        '0%, 100%': { opacity: 1 },
-        '50%': { opacity: 0.8 },
-      }
-    }}>
-      <Card sx={{ 
-        width: 480, 
-        maxWidth: '90%',
-        borderRadius: 4,
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-        overflow: 'hidden',
-        position: 'relative',
-        zIndex: 1,
-        background: 'rgba(255, 255, 255, 0.98)',
-        backdropFilter: 'blur(10px)',
-      }}>
-        <Box sx={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          p: 3,
-          textAlign: 'center',
-          color: 'white',
-        }}>
-          <School sx={{ fontSize: 48, mb: 1, opacity: 0.9 }} />
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-            SecureAttend
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.9 }}>
-            Advanced Attendance Management System
-          </Typography>
-        </Box>
-        <CardContent sx={{ p: 4 }}>
-          <Tabs 
-            value={tab} 
-            onChange={(_, v) => setTab(v)} 
-            centered 
-            sx={{ 
-              mb: 3,
-              '& .MuiTab-root': {
-                fontWeight: 600,
-                textTransform: 'none',
-                minHeight: 48,
-              },
-              '& .Mui-selected': {
-                color: '#667eea',
-              },
-              '& .MuiTabs-indicator': {
-                background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
-                height: 3,
-                borderRadius: '3px 3px 0 0',
-              }
-            }}
-          >
-            <Tab icon={<Person />} iconPosition="start" label="Professor" />
-            <Tab icon={<School />} iconPosition="start" label="Student" />
-            <Tab icon={<Badge />} iconPosition="start" label="TA" />
-          </Tabs>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-500 via-brand-700 to-pink-400 p-4">
+      <div className="w-full max-w-md bg-white/98 backdrop-blur rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-gradient-to-r from-brand-500 to-brand-700 p-6 text-center text-white">
+          <School className="mx-auto mb-2 opacity-90" size={48} />
+          <h1 className="text-2xl font-bold">SecureAttend</h1>
+          <p className="text-sm opacity-90 mt-1">Advanced Attendance Management System</p>
+        </div>
+
+        <div className="p-6">
+          <div className="flex border-b border-gray-200 mb-6">
+            {tabs.map((t, i) => (
+              <button
+                key={t.label}
+                onClick={() => setTab(i)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold border-b-2 transition ${
+                  tab === i ? 'border-brand-500 text-brand-500' : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {t.icon} {t.label}
+              </button>
+            ))}
+          </div>
+
           {error && (
-            <Alert 
-              severity="error" 
-              sx={{ 
-                mb: 2,
-                borderRadius: 2,
-                '& .MuiAlert-icon': {
-                  alignItems: 'center',
-                }
-              }}
-            >
-              {error}
-            </Alert>
+            <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm border border-red-200">{error}</div>
           )}
-          <TextField
-            fullWidth
+
+          <InputField
             label={['Email', 'Roll Number', 'TA ID'][tab]}
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            sx={{ mb: 2 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  {tab === 0 ? <Email sx={{ color: '#667eea' }} /> : <Badge sx={{ color: '#667eea' }} />}
-                </InputAdornment>
-              ),
-            }}
-            variant="outlined"
+            onChange={setUsername}
+            icon={tab === 0 ? <Mail size={18} /> : <Badge size={18} />}
           />
-          <TextField
-            fullWidth
-            type="password"
+          <InputField
             label="Password"
+            type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            sx={{ mb: 3 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Lock sx={{ color: '#667eea' }} />
-                </InputAdornment>
-              ),
-            }}
-            variant="outlined"
+            onChange={setPassword}
+            icon={<Lock size={18} />}
           />
-          <Button 
-            fullWidth 
-            variant="contained" 
-            onClick={handleLogin} 
-            disabled={loading} 
-            size="large"
-            sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              py: 1.5,
-              fontSize: '1rem',
-              fontWeight: 600,
-              textTransform: 'none',
-              borderRadius: 2,
-              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
-                boxShadow: '0 6px 20px rgba(102, 126, 234, 0.5)',
-              },
-              '&:disabled': {
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                opacity: 0.6,
-              }
-            }}
+
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full py-3 rounded-lg bg-gradient-to-r from-brand-500 to-brand-700 text-white font-semibold shadow-lg hover:opacity-90 disabled:opacity-60 transition"
           >
             {loading ? 'Logging in...' : 'Login'}
-          </Button>
+          </button>
+
           {tab === 0 && (
-            <Box sx={{ mt: 3, textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary">
-                Don't have an account?{' '}
-                <Link 
-                  component="button" 
-                  onClick={() => navigate('/signup')}
-                  sx={{
-                    color: '#667eea',
-                    fontWeight: 600,
-                    textDecoration: 'none',
-                    '&:hover': {
-                      textDecoration: 'underline',
-                    }
-                  }}
-                >
-                  Sign up
-                </Link>
-              </Typography>
-            </Box>
+            <p className="mt-4 text-center text-sm text-gray-600">
+              Don&apos;t have an account?{' '}
+              <button onClick={() => navigate('/signup')} className="text-brand-500 font-semibold hover:underline">
+                Sign up
+              </button>
+            </p>
           )}
-        </CardContent>
-      </Card>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -308,234 +217,99 @@ const Signup: React.FC = () => {
       await api.post('/auth/professor/signup', form);
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Signup failed');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || 'Signup failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
-      <Card sx={{ 
-        width: 480, 
-        maxWidth: '90%',
-        borderRadius: 4,
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-        background: 'rgba(255, 255, 255, 0.98)',
-        backdropFilter: 'blur(10px)',
-      }}>
-        <Box sx={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          p: 3,
-          textAlign: 'center',
-          color: 'white',
-        }}>
-          <Person sx={{ fontSize: 48, mb: 1, opacity: 0.9 }} />
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-            Professor Signup
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.9 }}>
-            Create your account to get started
-          </Typography>
-        </Box>
-        <CardContent sx={{ p: 4 }}>
-          {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
-          {success && <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>Registration successful! Redirecting...</Alert>}
-          <TextField 
-            fullWidth 
-            label="Name" 
-            value={form.name} 
-            onChange={(e) => setForm({ ...form, name: e.target.value })} 
-            sx={{ mb: 2 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Person sx={{ color: '#667eea' }} />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField 
-            fullWidth 
-            label="Email" 
-            value={form.email} 
-            onChange={(e) => setForm({ ...form, email: e.target.value })} 
-            sx={{ mb: 2 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Email sx={{ color: '#667eea' }} />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField 
-            fullWidth 
-            label="Department" 
-            value={form.department} 
-            onChange={(e) => setForm({ ...form, department: e.target.value })} 
-            sx={{ mb: 2 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <School sx={{ color: '#667eea' }} />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField 
-            fullWidth 
-            type="password" 
-            label="Password" 
-            value={form.password} 
-            onChange={(e) => setForm({ ...form, password: e.target.value })} 
-            sx={{ mb: 3 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Lock sx={{ color: '#667eea' }} />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Button 
-            fullWidth 
-            variant="contained" 
-            onClick={handleSignup} 
-            disabled={loading} 
-            size="large"
-            sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              py: 1.5,
-              fontSize: '1rem',
-              fontWeight: 600,
-              textTransform: 'none',
-              borderRadius: 2,
-              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
-                boxShadow: '0 6px 20px rgba(102, 126, 234, 0.5)',
-              },
-            }}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-500 via-brand-700 to-pink-400 p-4">
+      <div className="w-full max-w-md bg-white/98 backdrop-blur rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-gradient-to-r from-brand-500 to-brand-700 p-6 text-center text-white">
+          <User className="mx-auto mb-2 opacity-90" size={48} />
+          <h1 className="text-2xl font-bold">Professor Signup</h1>
+          <p className="text-sm opacity-90 mt-1">Create your account to get started</p>
+        </div>
+
+        <div className="p-6">
+          {error && <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>}
+          {success && <div className="mb-4 p-3 rounded-lg bg-green-50 text-green-700 text-sm">Registration successful! Redirecting...</div>}
+
+          <InputField label="Name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} icon={<User size={18} />} />
+          <InputField label="Email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} icon={<Mail size={18} />} />
+          <InputField label="Department" value={form.department} onChange={(v) => setForm({ ...form, department: v })} icon={<School size={18} />} />
+          <InputField label="Password" type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} icon={<Lock size={18} />} />
+
+          <button
+            onClick={handleSignup}
+            disabled={loading}
+            className="w-full py-3 rounded-lg bg-gradient-to-r from-brand-500 to-brand-700 text-white font-semibold shadow-lg hover:opacity-90 disabled:opacity-60 transition"
           >
             {loading ? 'Signing up...' : 'Sign Up'}
-          </Button>
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
-            <Link 
-              component="button" 
-              onClick={() => navigate('/login')}
-              sx={{
-                color: '#667eea',
-                fontWeight: 600,
-                textDecoration: 'none',
-                '&:hover': {
-                  textDecoration: 'underline',
-                }
-              }}
-            >
+          </button>
+
+          <p className="mt-4 text-center">
+            <button onClick={() => navigate('/login')} className="text-brand-500 font-semibold hover:underline text-sm">
               Back to Login
-            </Link>
-          </Box>
-        </CardContent>
-      </Card>
-    </Box>
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
   );
 };
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <Box sx={{ flexGrow: 1, minHeight: '100vh', background: 'linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)' }}>
-      <AppBar 
-        position="static" 
-        sx={{ 
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
-        }}
-      >
-        <Toolbar>
-          <School sx={{ mr: 2, fontSize: 32 }} />
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
-            SecureAttend
-          </Typography>
-          <Typography variant="body2" sx={{ mr: 2, opacity: 0.9 }}>
-            {user?.role}
-          </Typography>
-          <IconButton 
-            color="inherit" 
-            onClick={(e) => setAnchorEl(e.currentTarget)}
-            sx={{
-              '&:hover': {
-                background: 'rgba(255, 255, 255, 0.1)',
-              }
-            }}
-          >
-            <AccountCircle />
-          </IconButton>
-          <Menu 
-            anchorEl={anchorEl} 
-            open={Boolean(anchorEl)} 
-            onClose={() => setAnchorEl(null)}
-            PaperProps={{
-              sx: {
-                borderRadius: 2,
-                mt: 1,
-                minWidth: 200,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-              }
-            }}
-          >
-            <MenuItem disabled sx={{ opacity: 1 }}>
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: '#667eea' }}>
-                  {user?.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {user?.email}
-                </Typography>
-              </Box>
-            </MenuItem>
-            <MenuItem 
-              onClick={() => { logout(); navigate('/login'); }}
-              sx={{
-                '&:hover': {
-                  background: 'rgba(102, 126, 234, 0.08)',
-                }
-              }}
-            >
-              <ExitToApp sx={{ mr: 1, color: '#667eea' }} /> 
-              <Typography>Logout</Typography>
-            </MenuItem>
-          </Menu>
-        </Toolbar>
-      </AppBar>
-      <Container maxWidth="xl" sx={{ mt: 3, mb: 4 }}>
-        {children}
-      </Container>
-    </Box>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-brand-50">
+      <header className="bg-gradient-to-r from-brand-500 to-brand-700 text-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+          <School size={28} />
+          <h1 className="text-lg font-bold flex-1">SecureAttend</h1>
+          <span className="text-sm opacity-90 hidden sm:inline">{user?.role}</span>
+          <div className="relative">
+            <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 rounded-lg hover:bg-white/10 transition">
+              <MenuIcon size={22} />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl text-gray-800 py-2 z-50">
+                <div className="px-4 py-2 border-b">
+                  <p className="font-semibold text-brand-500">{user?.name}</p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
+                <button
+                  onClick={() => { logout(); navigate('/login'); }}
+                  className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-brand-50 text-sm"
+                >
+                  <LogOut size={16} className="text-brand-500" /> Logout
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+      <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
+    </div>
   );
 };
 
 const Unauthorized: React.FC = () => {
   const navigate = useNavigate();
   return (
-    <Box sx={{ textAlign: 'center', mt: 10 }}>
-      <Typography variant="h4" gutterBottom>Unauthorized Access</Typography>
-      <Typography variant="body1" sx={{ mb: 3 }}>You don't have permission to access this page.</Typography>
-      <Button variant="contained" onClick={() => navigate('/login')}>Back to Login</Button>
-    </Box>
+    <div className="text-center mt-20">
+      <h2 className="text-2xl font-bold text-gray-800 mb-2">Unauthorized Access</h2>
+      <p className="text-gray-600 mb-6">You don&apos;t have permission to access this page.</p>
+      <button onClick={() => navigate('/login')} className="px-6 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600">
+        Back to Login
+      </button>
+    </div>
   );
 };
 
@@ -546,34 +320,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-        
-        <Route
-          path="/professor"
-          element={
-            <ProtectedRoute allowedRoles={['PROFESSOR']}>
-              <AppLayout><ProfessorDashboard /></AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/student"
-          element={
-            <ProtectedRoute allowedRoles={['STUDENT']}>
-              <AppLayout><StudentPortal /></AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/ta"
-          element={
-            <ProtectedRoute allowedRoles={['TA']}>
-              <AppLayout><TADashboard /></AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        
+        <Route path="/professor" element={<ProtectedRoute allowedRoles={['PROFESSOR']}><AppLayout><ProfessorDashboard /></AppLayout></ProtectedRoute>} />
+        <Route path="/student" element={<ProtectedRoute allowedRoles={['STUDENT']}><AppLayout><StudentPortal /></AppLayout></ProtectedRoute>} />
+        <Route path="/ta" element={<ProtectedRoute allowedRoles={['TA']}><AppLayout><TADashboard /></AppLayout></ProtectedRoute>} />
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

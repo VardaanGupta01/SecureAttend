@@ -5,15 +5,11 @@ import {
   AlertCircle, Eye, Settings, Calendar, TrendingUp, Edit, Camera, User
 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
-import axios from 'axios';
+import api from '../config/api';
 import { profileAPI } from '../services/api';
 import './ProfessorDashboard.css';
 
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:8080/api'
-  : 'https://secure-attend-backend.onrender.com/api';
-
-const apiClient = axios.create({ baseURL: API_BASE, headers: { 'Content-Type': 'application/json' } });
+const apiClient = api;
 
 const getUser = () => {
   const stored = localStorage.getItem('user');
@@ -832,7 +828,20 @@ const ProfessorDashboard: React.FC = () => {
                       </div>
 
                       {sessions.length === 0 ? (
-                        <div className="empty">No active sessions</div>
+                        <div className="empty session-empty-cta">
+                          <QrCode size={40} style={{ opacity: 0.4, marginBottom: 12 }} />
+                          <p><strong>No active session yet</strong></p>
+                          <p style={{ fontSize: '0.9rem', marginTop: 8, opacity: 0.8 }}>
+                            Click the button below to start a session and get your QR code for students to scan.
+                          </p>
+                          <button
+                            className="btn primary"
+                            style={{ marginTop: 16 }}
+                            onClick={() => setShowCreateSessionModal(true)}
+                          >
+                            <Plus /> Start Session &amp; Get QR Code
+                          </button>
+                        </div>
                       ) : (
                         <div className="session-list">
                           {sessions.map(session => {
@@ -882,7 +891,12 @@ const ProfessorDashboard: React.FC = () => {
                   <div className="pa-section-title"><TrendingUp /> Live Attendance</div>
 
                   {!selectedSession ? (
-                    <div className="empty large">Select a session</div>
+                    <div className="empty large">
+                      <p>No session selected</p>
+                      <p style={{ fontSize: '0.85rem', marginTop: 8, opacity: 0.75 }}>
+                        Start a session first — the QR code and live attendance will appear here.
+                      </p>
+                    </div>
                   ) : (
                     <div className="attendance-panel">
                       <div className="stats-grid">
