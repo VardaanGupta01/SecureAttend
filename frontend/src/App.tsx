@@ -324,9 +324,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="/professor" element={<ProtectedRoute allowedRoles={['PROFESSOR']}><AppLayout><ProfessorDashboard /></AppLayout></ProtectedRoute>} />
-        <Route path="/student" element={<ProtectedRoute allowedRoles={['STUDENT']}><AppLayout><StudentPortal /></AppLayout></ProtectedRoute>} />
-        <Route path="/ta" element={<ProtectedRoute allowedRoles={['TA']}><AppLayout><TADashboard /></AppLayout></ProtectedRoute>} />
+        <Route path="/professor" element={<ProtectedRoute allowedRoles={['PROFESSOR']}><ProfessorDashboard /></ProtectedRoute>} />
+        <Route path="/student" element={<ProtectedRoute allowedRoles={['STUDENT']}><StudentPortal /></ProtectedRoute>} />
+        <Route path="/ta" element={<ProtectedRoute allowedRoles={['TA']}><TADashboard /></ProtectedRoute>} />
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

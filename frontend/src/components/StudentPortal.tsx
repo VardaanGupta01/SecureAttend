@@ -1,14 +1,8 @@
 import React, { useState, useEffect, Suspense } from "react";
-import {
-  Box, Typography, Card, CardContent, Button, TextField, List, ListItem, Chip, Grid,
-  Alert, Dialog, DialogTitle, DialogContent, DialogActions, Switch, FormControlLabel,
-  Paper, Stepper, Step, StepLabel, CircularProgress,
-} from "@mui/material";
-import {
-  QrCodeScanner as QrIcon, LocationOn as LocationIcon, Face as FaceIcon,
-  CheckCircle as CheckIcon, TrendingUp as TrendIcon,
-} from "@mui/icons-material";
+import { QrCode, MapPin, ScanFace, CheckCircle, TrendingUp, X, Loader2, GraduationCap } from "lucide-react";
 import api from '../config/api';
+import DashboardLayout from './layout/DashboardLayout';
+import StatusBadge from './ui/StatusBadge';
 
 const QrScanner = React.lazy(() =>
   import("react-qr-scanner").then((mod: any) => ({
@@ -82,10 +76,8 @@ const StudentPortal: React.FC = () => {
         (position) => {
           setLatitude(position.coords.latitude);
           setLongitude(position.coords.longitude);
-          console.log("📍 Location obtained:", position.coords.latitude, position.coords.longitude);
         },
-        (error) => {
-          console.warn("Geolocation error:", error);
+        () => {
           setLatitude(40.7128);
           setLongitude(-74.006);
         }
@@ -99,7 +91,6 @@ const StudentPortal: React.FC = () => {
   const loadStudentAttendance = async () => {
     try {
       const response = await api.get(`/student/${studentId}/attendance`);
-      console.log("Student attendance loaded:", response.data);
       const attendanceData = response.data?.data || response.data || [];
       setAttendance(Array.isArray(attendanceData) ? attendanceData : []);
     } catch (error: any) {
@@ -109,12 +100,10 @@ const StudentPortal: React.FC = () => {
     }
   };
 
-
   const handleScan = (data: any) => {
     if (!data) return;
     const scanned = typeof data === "string" ? data : data?.text || data?.data || "";
     if (scanned) {
-      console.log("QR Scanned:", scanned);
       setQrOrCodeword(scanned);
       setScannerOpen(false);
       setMessage({ type: "success", text: "QR code scanned successfully" });
@@ -130,8 +119,6 @@ const StudentPortal: React.FC = () => {
       setMessage({ type: "error", text: "Please enter Session ID and QR/Codeword" });
       return;
     }
-    console.log("Starting verification for session:", sessionId);
-    
     setVerificationSteps(["QR/Codeword"]);
     setActiveStep(0);
     setCurrentAttendance(null);
@@ -141,7 +128,6 @@ const StudentPortal: React.FC = () => {
   const initiateAttendance = async () => {
     setLoading(true);
     try {
-      console.log("Initiating attendance with:", { studentId, sessionId, qrOrCodeword });
       const response = await api.post('/student/attendance/initiate', {
         studentId,
         sessionId,
@@ -151,14 +137,10 @@ const StudentPortal: React.FC = () => {
       });
       
       const attendanceRecord = response.data?.data || response.data;
-      console.log("Attendance initiated:", attendanceRecord);
       setCurrentAttendance(attendanceRecord);
-      
       determineRemainingSteps(attendanceRecord);
-      
       setMessage({ type: "success", text: "QR verified! Proceeding to next verification step." });
     } catch (error: any) {
-      console.error("Initiate attendance error:", error);
       const errorMsg = error.response?.data?.message || "QR verification failed";
       setMessage({ type: "error", text: errorMsg });
     } finally {
@@ -168,8 +150,7 @@ const StudentPortal: React.FC = () => {
 
   const determineRemainingSteps = (attendance: Attendance) => {
     const steps = ["QR/Codeword"];
-    let nextStepIndex = 1;
-    
+    const nextStepIndex = 1;
     const currentStep = attendance.currentStep;
     
     if (currentStep === "QR_VERIFIED") {
@@ -183,10 +164,7 @@ const StudentPortal: React.FC = () => {
       steps.push("Location");
       steps.push("Face Recognition");
       setActiveStep(nextStepIndex + 2);
-      setMessage({ 
-        type: "success", 
-        text: "All verifications complete! Your attendance has been recorded and is awaiting approval." 
-      });
+      setMessage({ type: "success", text: "All verifications complete! Your attendance has been recorded and is awaiting approval." });
       setTimeout(() => {
         setVerificationDialogOpen(false);
         loadStudentAttendance();
@@ -231,7 +209,6 @@ const StudentPortal: React.FC = () => {
 
     setLoading(true);
     try {
-      console.log("Verifying location:", { attendanceId: currentAttendance.id, latitude, longitude, wifiSsid });
       const response = await api.post('/student/attendance/verify-location', {
         attendanceId: currentAttendance.id,
         latitude,
@@ -240,17 +217,13 @@ const StudentPortal: React.FC = () => {
       });
       
       const updated = response.data?.data || response.data;
-      console.log("Location verified:", updated);
       setCurrentAttendance(updated);
       
       if (updated.currentStep === "LOCATION_VERIFIED") {
         setActiveStep(2);
         setMessage({ type: "success", text: "Location verified! Proceed to face verification." });
       } else if (updated.currentStep === "FACE_VERIFIED" || updated.currentStep === "AWAITING_PROFESSOR") {
-        setMessage({ 
-          type: "success", 
-          text: "All verifications complete! Your attendance has been recorded." 
-        });
+        setMessage({ type: "success", text: "All verifications complete! Your attendance has been recorded." });
         setTimeout(() => {
           setVerificationDialogOpen(false);
           loadStudentAttendance();
@@ -258,7 +231,6 @@ const StudentPortal: React.FC = () => {
         }, 2000);
       }
     } catch (error: any) {
-      console.error("Location verification error:", error);
       const errorMsg = error.response?.data?.message || "Location verification failed";
       setMessage({ type: "error", text: errorMsg });
     } finally {
@@ -278,7 +250,6 @@ const StudentPortal: React.FC = () => {
 
     setLoading(true);
     try {
-      console.log("➡️ Verifying face for attendance:", currentAttendance.id);
       const response = await api.post('/student/attendance/verify-face', {
         attendanceId: currentAttendance.id,
         faceImageBase64,
@@ -286,7 +257,6 @@ const StudentPortal: React.FC = () => {
       });
       
       const updated = response.data?.data || response.data;
-      console.log("Face verified:", updated);
       setCurrentAttendance(updated);
       
       if (updated.currentStep === "COMPLETED") {
@@ -301,7 +271,6 @@ const StudentPortal: React.FC = () => {
         resetForm();
       }, 2000);
     } catch (error: any) {
-      console.error("Face verification error:", error);
       const errorMsg = error.response?.data?.message || "Face verification failed";
       setMessage({ type: "error", text: errorMsg });
     } finally {
@@ -312,519 +281,213 @@ const StudentPortal: React.FC = () => {
   const simulateFaceCapture = () => {
     setFaceImageBase64("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
     setLivenessPassed(true);
-    console.log("Face captured (simulated)");
     setMessage({ type: "success", text: "Face captured and liveness verified" });
   };
 
   const proceedToNextStep = () => {
-    if (activeStep === 0) {
-      initiateAttendance();
-    } else if (activeStep === 1) {
-      verifyLocation();
-    } else if (activeStep === 2) {
-      verifyFace();
-    }
+    if (activeStep === 0) initiateAttendance();
+    else if (activeStep === 1) verifyLocation();
+    else if (activeStep === 2) verifyFace();
   };
 
   const getStepContent = () => {
     switch (activeStep) {
       case 0:
         return (
-          <Box>
-            <Typography variant="body1" gutterBottom>
-              Verify your QR code or codeword to begin attendance marking.
-            </Typography>
-            <Paper sx={{ p: 2, bgcolor: 'grey.50', mt: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                <strong>Session ID:</strong> {sessionId}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                <strong>QR/Codeword:</strong> {qrOrCodeword}
-              </Typography>
-            </Paper>
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={proceedToNextStep}
-              disabled={loading}
-              sx={{ mt: 2 }}
-            >
-              {loading ? <CircularProgress size={24} /> : "Verify QR/Codeword"}
-            </Button>
-          </Box>
+          <div>
+            <p className="form-hint" style={{ marginBottom: 12 }}>Verify your QR code or codeword to begin.</p>
+            <div className="info-box" style={{ marginBottom: 16 }}>
+              <div><strong>Session ID:</strong> {sessionId}</div>
+              <div style={{ marginTop: 4 }}><strong>QR/Codeword:</strong> {qrOrCodeword}</div>
+            </div>
+            <button type="button" className="btn primary full" onClick={proceedToNextStep} disabled={loading}>
+              {loading ? 'Verifying…' : 'Verify QR / Codeword'}
+            </button>
+          </div>
         );
-      
       case 1:
         return (
-          <Box>
-            <Typography variant="body1" gutterBottom>
-              Verify your location to ensure you&apos;re in the classroom.
-            </Typography>
-            <Paper sx={{ p: 2, bgcolor: 'grey.50', mt: 2 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                <strong>Current Location:</strong>
-              </Typography>
-              <Typography variant="body2">
-                Latitude: {latitude?.toFixed(6)}
-              </Typography>
-              <Typography variant="body2">
-                Longitude: {longitude?.toFixed(6)}
-              </Typography>
-            </Paper>
-            <TextField
-              fullWidth
-              required
-              label="Wi-Fi Network Name (SSID)"
-              value={wifiSsid}
-              onChange={(e) => setWifiSsid(e.target.value)}
-              placeholder="e.g., Campus-WiFi"
-              helperText="Type the exact Wi-Fi name your professor set for this session (must match exactly)"
-              sx={{ mt: 2 }}
-              variant="outlined"
-            />
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={proceedToNextStep}
-              disabled={loading || !wifiSsid.trim()}
-              startIcon={<LocationIcon />}
-              sx={{ mt: 2 }}
-            >
-              {loading ? <CircularProgress size={24} /> : "Verify Location"}
-            </Button>
-          </Box>
+          <div>
+            <p className="form-hint" style={{ marginBottom: 12 }}>Confirm you are in the classroom.</p>
+            <div className="info-box" style={{ marginBottom: 16 }}>
+              <div><strong>Latitude:</strong> {latitude?.toFixed(6)}</div>
+              <div><strong>Longitude:</strong> {longitude?.toFixed(6)}</div>
+            </div>
+            <div className="form-field">
+              <label>Wi-Fi Network Name (SSID)</label>
+              <input className="form-input" value={wifiSsid} onChange={(e) => setWifiSsid(e.target.value)} placeholder="e.g., Campus-WiFi" />
+              <div className="form-hint">Must match exactly what your professor set for this session</div>
+            </div>
+            <button type="button" className="btn primary full" onClick={proceedToNextStep} disabled={loading || !wifiSsid.trim()}>
+              <MapPin size={16} /> {loading ? 'Verifying…' : 'Verify Location'}
+            </button>
+          </div>
         );
-      
       case 2:
         return (
-          <Box>
-            <Typography variant="body1" gutterBottom>
-              Capture your face for biometric verification.
-            </Typography>
-            <Paper sx={{ p: 2, bgcolor: 'grey.50', mt: 2, textAlign: 'center' }}>
+          <div>
+            <p className="form-hint" style={{ marginBottom: 12 }}>Capture your face for biometric verification.</p>
+            <div className="info-box" style={{ marginBottom: 16, textAlign: 'center' }}>
               {faceImageBase64 ? (
-                <Box>
-                  <CheckIcon color="success" sx={{ fontSize: 60 }} />
-                  <Typography variant="body2" color="success.main" sx={{ mt: 1 }}>
-                    Face captured successfully
-                  </Typography>
-                </Box>
+                <>
+                  <CheckCircle size={48} color="#059669" style={{ margin: '0 auto' }} />
+                  <p style={{ color: '#059669', marginTop: 8 }}>Face captured successfully</p>
+                </>
               ) : (
-                <Box>
-                  <FaceIcon sx={{ fontSize: 60, color: 'text.secondary' }} />
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    No face captured yet
-                  </Typography>
-                </Box>
+                <>
+                  <ScanFace size={48} color="#6b7280" style={{ margin: '0 auto' }} />
+                  <p style={{ marginTop: 8 }}>No face captured yet</p>
+                </>
               )}
-              <Button
-                variant="outlined"
-                startIcon={<FaceIcon />}
-                onClick={simulateFaceCapture}
-                sx={{ mt: 2 }}
-              >
+              <button type="button" className="btn ghost" style={{ marginTop: 12 }} onClick={simulateFaceCapture}>
                 Capture Face
-              </Button>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={livenessPassed}
-                    onChange={(e) => setLivenessPassed(e.target.checked)}
-                  />
-                }
-                label="Liveness Detected"
-                sx={{ mt: 2, display: 'block' }}
-              />
-            </Paper>
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={proceedToNextStep}
-              disabled={loading || !faceImageBase64 || !livenessPassed}
-              startIcon={<CheckIcon />}
-              sx={{ mt: 2 }}
-            >
-              {loading ? <CircularProgress size={24} /> : "Complete Verification"}
-            </Button>
-          </Box>
+              </button>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 12 }}>
+                <input type="checkbox" checked={livenessPassed} onChange={(e) => setLivenessPassed(e.target.checked)} />
+                Liveness detected
+              </label>
+            </div>
+            <button type="button" className="btn primary full" onClick={proceedToNextStep} disabled={loading || !faceImageBase64 || !livenessPassed}>
+              <CheckCircle size={16} /> {loading ? 'Verifying…' : 'Complete Verification'}
+            </button>
+          </div>
         );
-      
       default:
         return null;
     }
   };
 
-  const getStatusChip = (att: Attendance) => {
-    if (att.finalStatus === "APPROVED") {
-      return <Chip label="✓ Approved" color="success" size="small" />;
-    }
-    if (att.finalStatus === "REJECTED") {
-      return <Chip label="✗ Rejected" color="error" size="small" />;
-    }
-    if (att.flaggedProxy) {
-      return <Chip label="⚠ Flagged" color="warning" size="small" />;
-    }
-    if (att.professorVerified && att.taVerified) {
-      return <Chip label="✓✓ Fully Verified" color="success" size="small" />;
-    }
-    if (att.professorVerified) {
-      return <Chip label="✓ Prof Verified" color="info" size="small" />;
-    }
-    if (att.systemVerified) {
-      return <Chip label="System Verified" color="primary" size="small" />;
-    }
-    return <Chip label="Pending" color="default" size="small" />;
-  };
-
+  const getStatusChip = (att: Attendance) => (
+    <StatusBadge
+      status={att.finalStatus}
+      flaggedProxy={att.flaggedProxy}
+      systemVerified={att.systemVerified}
+      professorVerified={att.professorVerified}
+      taVerified={att.taVerified}
+    />
+  );
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box>
-          <Typography 
-            variant="h4" 
-            sx={{ 
-              fontWeight: 700, 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              mb: 1
-            }}
-          >
-            Student Portal
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Welcome back, <strong>{user?.name || 'Student'}</strong>! 👋
-          </Typography>
-        </Box>
-        {userProfilePicture && (
-          <Box
-            sx={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '50%',
-              border: '2px solid rgba(102, 126, 234, 0.2)',
-              overflow: 'hidden',
-              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <img 
-              src={userProfilePicture} 
-              alt="Profile" 
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-            />
-          </Box>
-        )}
-      </Box>
+    <DashboardLayout
+      title="Student Portal"
+      subtitle={`Welcome back, ${user?.name || "Student"}!`}
+      icon={<GraduationCap size={28} />}
+      profilePicture={userProfilePicture}
+      message={message}
+      onDismissMessage={() => setMessage(null)}
+    >
+      <div className="pa-grid-2">
+        <div className="panel-card">
+          <div className="panel-card-header">
+            <QrCode size={18} /> Mark Attendance
+          </div>
+          <div className="panel-card-body">
+            <div className="form-field">
+              <label>Session ID</label>
+              <input className="form-input" value={sessionId} onChange={(e) => setSessionId(e.target.value)} placeholder="Enter session ID from professor" />
+              <div className="form-hint">Get the session ID from your professor&apos;s screen</div>
+            </div>
+            <div className="form-field">
+              <label>QR Code or Codeword</label>
+              <input className="form-input" value={qrOrCodeword} onChange={(e) => setQrOrCodeword(e.target.value)} placeholder="Scan QR or enter codeword" />
+              <div className="form-hint">Scan the QR code or type the codeword shown by professor</div>
+            </div>
+            <div className="form-field">
+              <label>Wi-Fi Network Name (SSID)</label>
+              <input className="form-input" value={wifiSsid} onChange={(e) => setWifiSsid(e.target.value)} placeholder="e.g., Campus-WiFi" />
+              <div className="form-hint">Required if professor enabled WiFi check — enter the exact network name</div>
+            </div>
+            <button type="button" className="btn primary full" style={{ marginBottom: 10 }} onClick={startVerification} disabled={!sessionId || !qrOrCodeword}>
+              Start Verification Process
+            </button>
+            <button type="button" className="btn ghost full" onClick={() => setScannerOpen(true)}>
+              <QrCode size={16} /> Scan QR Code
+            </button>
+            <div className="info-box" style={{ marginTop: 16 }}>
+              <div className="info-box-title">Current Location</div>
+              <div><strong>Latitude:</strong> {latitude?.toFixed(4)}</div>
+              <div><strong>Longitude:</strong> {longitude?.toFixed(4)}</div>
+              <div><strong>Wi-Fi:</strong> {wifiSsid || "Not set"}</div>
+            </div>
+          </div>
+        </div>
 
-      {message && (
-        <Alert 
-          severity={message.type} 
-          onClose={() => setMessage(null)} 
-          sx={{ 
-            mb: 3,
-            borderRadius: 2,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-          }}
-        >
-          {message.text}
-        </Alert>
+        <div className="panel-card">
+          <div className="panel-card-header">
+            <TrendingUp size={18} /> Attendance History
+          </div>
+          <div className="panel-card-body">
+            {attendance.length === 0 ? (
+              <div className="empty">
+                <strong>No attendance records yet</strong>
+                <p style={{ marginTop: 8 }}>Mark your first attendance to see it here</p>
+              </div>
+            ) : (
+              attendance.map((att) => (
+                <div key={att.id} className="history-item">
+                  <div className="history-item-header">
+                    <strong>Session {att.sessionId.substring(0, 8)}...</strong>
+                    {getStatusChip(att)}
+                  </div>
+                  <div className="history-meta"><strong>Checked in:</strong> {new Date(att.checkInTime).toLocaleString()}</div>
+                  <div className="history-meta"><strong>Status:</strong> {att.currentStep}</div>
+                  <div className="chip-row">
+                    {att.verificationLayersPassed.map((layer) => (
+                      <span key={layer} className="chip">{layer}</span>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {verificationDialogOpen && (
+        <div className="modal-overlay" onClick={() => !loading && setVerificationDialogOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              Multi-Layer Verification
+              <button type="button" className="icon-btn" onClick={() => !loading && setVerificationDialogOpen(false)}><X size={18} /></button>
+            </div>
+            <div className="modal-body">
+              <div className="stepper">
+                {verificationSteps.map((label, idx) => (
+                  <div key={label} className={`step ${idx === activeStep ? "active" : idx < activeStep ? "done" : ""}`}>{label}</div>
+                ))}
+              </div>
+              {getStepContent()}
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn ghost" onClick={() => setVerificationDialogOpen(false)} disabled={loading}>Cancel</button>
+            </div>
+          </div>
+        </div>
       )}
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Card 
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.95) 100%)',
-              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.12)',
-              border: '1px solid rgba(102, 126, 234, 0.1)',
-              overflow: 'hidden',
-            }}
-          >
-            <Box sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              p: 2,
-              color: 'white',
-            }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <QrIcon /> Mark Attendance
-              </Typography>
-            </Box>
-            <CardContent sx={{ p: 3 }}>
-
-              <TextField
-                fullWidth
-                label="Session ID"
-                value={sessionId}
-                onChange={(e) => setSessionId(e.target.value)}
-                placeholder="Enter session ID from professor"
-                helperText="Get the session ID from your professor's screen"
-                sx={{ mb: 2.5 }}
-                variant="outlined"
-              />
-
-              <TextField
-                fullWidth
-                label="QR Code or Codeword"
-                value={qrOrCodeword}
-                onChange={(e) => setQrOrCodeword(e.target.value)}
-                placeholder="Scan QR or enter codeword"
-                helperText="Scan the QR code or type the codeword shown by professor"
-                sx={{ mb: 2.5 }}
-                variant="outlined"
-              />
-
-              <TextField
-                fullWidth
-                label="Wi-Fi Network Name (SSID)"
-                value={wifiSsid}
-                onChange={(e) => setWifiSsid(e.target.value)}
-                placeholder="e.g., Campus-WiFi"
-                helperText="Required if professor enabled WiFi check — enter the exact network name"
-                sx={{ mb: 3 }}
-                variant="outlined"
-              />
-
-              <Button
-                variant="contained"
-                fullWidth
-                onClick={startVerification}
-                disabled={!sessionId || !qrOrCodeword}
-                sx={{ 
-                  mb: 2,
-                  py: 1.5,
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
-                    boxShadow: '0 6px 20px rgba(102, 126, 234, 0.5)',
-                  },
-                  '&:disabled': {
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    opacity: 0.6,
-                  }
-                }}
-                size="large"
-              >
-                Start Verification Process
-              </Button>
-
-              <Button
-                variant="outlined"
-                fullWidth
-                onClick={() => setScannerOpen(true)}
-                startIcon={<QrIcon />}
-                sx={{
-                  borderColor: '#667eea',
-                  color: '#667eea',
-                  '&:hover': {
-                    borderColor: '#5568d3',
-                    background: 'rgba(102, 126, 234, 0.08)',
-                  }
-                }}
-              >
-                Scan QR Code
-              </Button>
-
-              <Paper 
-                sx={{ 
-                  p: 2.5, 
-                  mt: 3,
-                  borderRadius: 2,
-                  background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
-                  border: '1px solid rgba(102, 126, 234, 0.1)',
-                }}
-              >
-                <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, color: '#667eea', mb: 1.5 }}>
-                  📍 Current Location
-                </Typography>
-                <Typography variant="body2" sx={{ mb: 0.5 }}>
-                  <strong>Latitude:</strong> {latitude?.toFixed(4)}
-                </Typography>
-                <Typography variant="body2" sx={{ mb: 0.5 }}>
-                  <strong>Longitude:</strong> {longitude?.toFixed(4)}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Wi-Fi:</strong> {wifiSsid || "Not detected"}
-                </Typography>
-              </Paper>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Card 
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.95) 100%)',
-              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.12)',
-              border: '1px solid rgba(102, 126, 234, 0.1)',
-              overflow: 'hidden',
-            }}
-          >
-            <Box sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              p: 2,
-              color: 'white',
-            }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <TrendIcon /> Attendance History
-              </Typography>
-            </Box>
-            <CardContent sx={{ p: 3 }}>
-              {attendance.length === 0 ? (
-                <Paper 
-                  sx={{ 
-                    p: 4, 
-                    textAlign: 'center', 
-                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
-                    borderRadius: 2,
-                    border: '1px dashed rgba(102, 126, 234, 0.2)',
-                  }}
-                >
-                  <Typography variant="body1" sx={{ fontWeight: 600, color: '#667eea', mb: 1 }}>
-                    No attendance records yet
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Mark your first attendance to see it here
-                  </Typography>
-                </Paper>
-              ) : (
-                <List sx={{ p: 0 }}>
-                  {attendance.map((att) => (
-                    <Paper
-                      key={att.id}
-                      sx={{
-                        mb: 2,
-                        p: 2.5,
-                        border: '1px solid',
-                        borderColor: 'rgba(102, 126, 234, 0.15)',
-                        borderRadius: 2,
-                        background: 'white',
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          boxShadow: '0 4px 12px rgba(102, 126, 234, 0.15)',
-                          transform: 'translateY(-2px)',
-                        }
-                      }}
-                    >
-                      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                          Session {att.sessionId.substring(0, 8)}...
-                        </Typography>
-                        {getStatusChip(att)}
-                      </Box>
-                      <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: 0.5 }}>
-                        <strong>Checked in:</strong> {new Date(att.checkInTime).toLocaleString()}
-                      </Typography>
-                      <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: 1.5 }}>
-                        <strong>Status:</strong> {att.currentStep}
-                      </Typography>
-                      <Box sx={{ mt: 1.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {att.verificationLayersPassed.map((layer) => (
-                          <Chip
-                            key={layer}
-                            label={layer}
-                            size="small"
-                            sx={{ 
-                              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-                              color: '#667eea',
-                              border: '1px solid rgba(102, 126, 234, 0.2)',
-                              fontWeight: 500,
-                            }}
-                          />
-                        ))}
-                      </Box>
-                    </Paper>
-                  ))}
-                </List>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      <Dialog 
-        open={verificationDialogOpen} 
-        onClose={() => !loading && setVerificationDialogOpen(false)} 
-        maxWidth="sm" 
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-          }
-        }}
-      >
-        <DialogTitle sx={{ 
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white',
-          fontWeight: 700,
-        }}>
-          Multi-Layer Verification
-        </DialogTitle>
-        <DialogContent>
-          <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
-            {verificationSteps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-          {getStepContent()}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setVerificationDialogOpen(false)} disabled={loading}>
-            Cancel
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog 
-        open={scannerOpen} 
-        onClose={() => setScannerOpen(false)}
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-          }
-        }}
-      >
-        <DialogTitle sx={{ 
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white',
-          fontWeight: 700,
-        }}>
-          Scan QR Code
-        </DialogTitle>
-        <DialogContent>
-          <Suspense fallback={<CircularProgress />}>
-            <Box sx={{ width: 320, height: 320 }}>
-              <QrScanner
-                delay={500}
-                onScan={handleScan}
-                onError={handleScanError}
-                style={{ width: "100%" }}
-              />
-            </Box>
-          </Suspense>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-            Point your camera at the QR code displayed by the professor
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setScannerOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
-
-    </Box>
+      {scannerOpen && (
+        <div className="modal-overlay" onClick={() => setScannerOpen(false)}>
+          <div className="modal sm" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              Scan QR Code
+              <button type="button" className="icon-btn" onClick={() => setScannerOpen(false)}><X size={18} /></button>
+            </div>
+            <div className="modal-body">
+              <Suspense fallback={<div style={{ textAlign: "center", padding: 40 }}><Loader2 size={32} /></div>}>
+                <div style={{ width: 320, height: 320, margin: "0 auto" }}>
+                  <QrScanner delay={500} onScan={handleScan} onError={handleScanError} style={{ width: "100%" }} />
+                </div>
+              </Suspense>
+              <p className="form-hint" style={{ marginTop: 12, textAlign: "center" }}>Point your camera at the QR code displayed by the professor</p>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn ghost" onClick={() => setScannerOpen(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </DashboardLayout>
   );
 };
 
-export default StudentPortal;  
+export default StudentPortal;

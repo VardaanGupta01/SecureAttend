@@ -5,9 +5,9 @@ import {
   AlertCircle, Eye, Settings, Calendar, TrendingUp, Edit, Camera, User
 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
+import DashboardLayout from './layout/DashboardLayout';
 import api from '../config/api';
 import { profileAPI } from '../services/api';
-import './ProfessorDashboard.css';
 
 const apiClient = api;
 
@@ -108,6 +108,7 @@ const ProfessorDashboard: React.FC = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
+  const [profileModalPreview, setProfileModalPreview] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success'|'error', text: string }|null>(null);
   const [headcount, setHeadcount] = useState<number>(0);
   const [editingSession, setEditingSession] = useState<SessionItem | null>(null);
@@ -486,7 +487,7 @@ const ProfessorDashboard: React.FC = () => {
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setProfilePicture(base64String);
-        setProfilePreview(base64String);
+        setProfileModalPreview(base64String);
       };
       reader.readAsDataURL(file);
     }
@@ -496,9 +497,9 @@ const ProfessorDashboard: React.FC = () => {
     if (!professorId || !profilePicture) return;
     try {
       await profileAPI.updateProfilePicture(professorId, 'PROFESSOR', profilePicture);
-      setMessage({ type: 'success', text: 'Profile picture updated successfully' });
       setShowProfileModal(false);
       setProfilePicture(null);
+      setProfileModalPreview(null);
       await loadProfessorProfile();
     } catch (err: any) {
       setMessage({ type: 'error', text: err?.response?.data?.message || 'Failed to update profile picture' });
@@ -754,56 +755,29 @@ const ProfessorDashboard: React.FC = () => {
   }, [message]);
 
   return (
-    <div className="pa-root">
-      <div className="pa-container">
-        <header className="pa-header">
-          <div className="pa-header-left">
-            <div className="pa-logo">
-              <div className="pa-logo-icon"><GraduationCap /></div>
-              <div>
-                <h1 className="pa-title">Professor Dashboard</h1>
-                <div className="pa-sub">Welcome back, {user?.name ?? 'Professor'}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="pa-header-right">
-            <button 
-              className="btn icon subtle" 
-              onClick={() => setShowProfileModal(true)}
-              title="Update Profile Picture"
-              style={{ 
-                width: '48px', 
-                height: '48px', 
-                borderRadius: '50%', 
-                padding: 0,
-                overflow: 'hidden',
-                border: '2px solid rgba(102, 126, 234, 0.2)'
-              }}
-            >
-              {profilePreview ? (
-                <img src={profilePreview} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <User style={{ width: '24px', height: '24px' }} />
-              )}
-            </button>
-            <button className="btn primary" onClick={() => setShowCreateClassModal(true)}>
-              <Plus className="ico" /> Create Class
-            </button>
-            <button className="btn ghost" onClick={() => setShowCreateTAModal(true)}>
-              <UserPlus className="ico" /> Add TA
-            </button>
-          </div>
-        </header>
-
-        {message && (
-          <div className={`pa-alert ${message.type === 'success' ? 'pa-alert-success' : 'pa-alert-error'}`}>
-            {message.type === 'success' ? <CheckCircle /> : <AlertCircle />} 
-            <div className="pa-alert-text">{message.text}</div>
-            <button className="pa-alert-close" onClick={() => setMessage(null)}><XCircle /></button>
-          </div>
-        )}
-
+    <DashboardLayout
+      title="Professor Dashboard"
+      subtitle={`Welcome back, ${user?.name ?? 'Professor'}`}
+      icon={<GraduationCap size={28} />}
+      profilePicture={profilePreview}
+      onProfileClick={() => {
+        setProfileModalPreview(profilePreview);
+        setProfilePicture(null);
+        setShowProfileModal(true);
+      }}
+      message={message}
+      onDismissMessage={() => setMessage(null)}
+      headerActions={
+        <>
+          <button type="button" className="btn primary" onClick={() => setShowCreateClassModal(true)}>
+            <Plus className="ico" /> Create Class
+          </button>
+          <button type="button" className="btn ghost" onClick={() => setShowCreateTAModal(true)}>
+            <UserPlus className="ico" /> Add TA
+          </button>
+        </>
+      }
+    >
         <div className="pa-card">
           <nav className="pa-tabs">
             <button className={`pa-tab ${activeTab==='sessions' ? 'active':''}`} onClick={() => setActiveTab('sessions')}>
@@ -1169,7 +1143,6 @@ const ProfessorDashboard: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
 
 
       {showQRModal && selectedSession && (
@@ -1688,11 +1661,11 @@ const ProfessorDashboard: React.FC = () => {
       )}
 
       {showProfileModal && (
-        <div className="modal-overlay" onClick={() => { setShowProfileModal(false); setProfilePicture(null); setProfilePreview(null); }}>
+        <div className="modal-overlay" onClick={() => { setShowProfileModal(false); setProfilePicture(null); setProfileModalPreview(null); }}>
           <div className="modal" onClick={(e)=>e.stopPropagation()}>
             <div className="modal-header">
               <h4><User /> Update Profile Picture</h4>
-              <button className="icon-btn" onClick={() => { setShowProfileModal(false); setProfilePicture(null); setProfilePreview(null); }}><XCircle/></button>
+              <button className="icon-btn" onClick={() => { setShowProfileModal(false); setProfilePicture(null); setProfileModalPreview(null); }}><XCircle/></button>
             </div>
             <div className="modal-body" style={{ textAlign: 'center' }}>
               <div style={{ 
@@ -1703,18 +1676,18 @@ const ProfessorDashboard: React.FC = () => {
                 padding: '20px',
                 border: '2px dashed rgba(102, 126, 234, 0.3)',
                 borderRadius: '12px',
-                background: profilePreview ? 'transparent' : 'rgba(102, 126, 234, 0.02)',
+                background: profileModalPreview ? 'transparent' : 'rgba(102, 126, 234, 0.02)',
                 cursor: 'pointer',
                 transition: 'all 0.2s'
               }}
               onClick={() => document.getElementById('profile-upload')?.click()}
-              onMouseEnter={(e) => { if (!profilePreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.05)'; }}
-              onMouseLeave={(e) => { if (!profilePreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.02)'; }}
+              onMouseEnter={(e) => { if (!profileModalPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.05)'; }}
+              onMouseLeave={(e) => { if (!profileModalPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.02)'; }}
               >
-                {profilePreview ? (
+                {profileModalPreview ? (
                   <>
                     <img 
-                      src={profilePreview} 
+                      src={profileModalPreview} 
                       alt="Preview" 
                       style={{ 
                         width: '150px', 
@@ -1731,7 +1704,7 @@ const ProfessorDashboard: React.FC = () => {
                       onClick={(e) => {
                         e.stopPropagation();
                         setProfilePicture(null);
-                        setProfilePreview(null);
+                        setProfileModalPreview(null);
                       }}
                     >
                       <XCircle style={{ width: '14px', height: '14px' }} /> Remove Photo
@@ -1758,14 +1731,14 @@ const ProfessorDashboard: React.FC = () => {
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn ghost" onClick={() => { setShowProfileModal(false); setProfilePicture(null); setProfilePreview(null); }}>Cancel</button>
+              <button className="btn ghost" onClick={() => { setShowProfileModal(false); setProfilePicture(null); setProfileModalPreview(null); }}>Cancel</button>
               <button className="btn primary" onClick={updateProfilePicture} disabled={!profilePicture}>Update Profile Picture</button>
             </div>
           </div>
         </div>
       )}
 
-    </div>
+    </DashboardLayout>
   );
 };
 
