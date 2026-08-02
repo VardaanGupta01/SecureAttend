@@ -124,10 +124,68 @@ const ProfessorDashboard: React.FC = () => {
   });
 
   const [sessionForm, setSessionForm] = useState<any>({
-    latitude: 40.7128, longitude: -74.0060, wifiSSID: "Campus-WiFi",
+    latitude: 0, longitude: 0, wifiSSID: "Campus-WiFi",
     allowedRadiusMeters: 50, durationMinutes: 120, requireLocation: true,
     requireFace: true, requireProfessorVerification: true, requireTAVerification: false
   });
+
+  const [locationLoading, setLocationLoading] = useState(false);
+
+  const fetchCurrentLocation = (): Promise<{ latitude: number; longitude: number }> =>
+    new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation not supported'));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) =>
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          }),
+        (error) => reject(error),
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    });
+
+  const applyLocationToSessionForm = async (classItem?: ClassItem | null) => {
+    setLocationLoading(true);
+    try {
+      const { latitude, longitude } = await fetchCurrentLocation();
+      setSessionForm((prev: typeof sessionForm) => ({
+        ...prev,
+        latitude,
+        longitude,
+        wifiSSID: classItem?.wifiSSID ?? prev.wifiSSID,
+      }));
+    } catch {
+      if (classItem?.latitude != null && classItem?.longitude != null) {
+        setSessionForm((prev: typeof sessionForm) => ({
+          ...prev,
+          latitude: classItem.latitude,
+          longitude: classItem.longitude,
+          wifiSSID: classItem.wifiSSID ?? prev.wifiSSID,
+        }));
+        setMessage({ type: 'error', text: 'GPS unavailable — using class location. Allow browser location or enter coordinates manually.' });
+      } else {
+        setMessage({ type: 'error', text: 'Could not get your location. Allow location access in the browser and try again.' });
+      }
+    } finally {
+      setLocationLoading(false);
+    }
+  };
+
+  const openCreateSessionModal = () => {
+    if (!selectedClass) return;
+    setSessionForm((prev: typeof sessionForm) => ({
+      ...prev,
+      latitude: selectedClass.latitude ?? prev.latitude,
+      longitude: selectedClass.longitude ?? prev.longitude,
+      wifiSSID: selectedClass.wifiSSID ?? prev.wifiSSID,
+    }));
+    setShowCreateSessionModal(true);
+    applyLocationToSessionForm(selectedClass);
+  };
 
   const [editSessionForm, setEditSessionForm] = useState<any>({
     latitude: 40.7128, longitude: -74.0060, wifiSSID: "Campus-WiFi",
@@ -818,7 +876,7 @@ const ProfessorDashboard: React.FC = () => {
                           <button className="btn subtle" onClick={() => { setAssignTAForm({selectedTAs: selectedClass.taIds || []}); setShowAssignTAModal(true); }}>
                             <Settings /> Manage TAs
                           </button>
-                          <button className="btn primary" onClick={() => setShowCreateSessionModal(true)}><Plus /> New Session</button>
+                          <button className="btn primary" onClick={openCreateSessionModal}><Plus /> New Session</button>
                         </div>
                       </div>
 
@@ -837,7 +895,7 @@ const ProfessorDashboard: React.FC = () => {
                           <button
                             className="btn primary"
                             style={{ marginTop: 16 }}
-                            onClick={() => setShowCreateSessionModal(true)}
+                            onClick={openCreateSessionModal}
                           >
                             <Plus /> Start Session &amp; Get QR Code
                           </button>
@@ -1224,6 +1282,19 @@ const ProfessorDashboard: React.FC = () => {
           <div className="modal large" onClick={(e)=>e.stopPropagation()}>
             <div className="modal-header"><h4><Calendar /> Create Session for {selectedClass.code}</h4><button className="icon-btn" onClick={()=>setShowCreateSessionModal(false)}><XCircle/></button></div>
             <div className="modal-body">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 12 }}>
+                <span style={{ fontSize: '0.9rem', color: '#555' }}>
+                  {locationLoading ? '📍 Fetching your current location…' : '📍 Session location (used to verify students are in class)'}
+                </span>
+                <button
+                  type="button"
+                  className="btn subtle"
+                  disabled={locationLoading}
+                  onClick={() => applyLocationToSessionForm(selectedClass)}
+                >
+                  <MapPin /> Refresh GPS
+                </button>
+              </div>
               <div className="grid-2">
                 <label>Latitude<input type="number" step="0.000001" value={sessionForm.latitude} onChange={e=>setSessionForm({...sessionForm, latitude: parseFloat(e.target.value||'0')})} /></label>
                 <label>Longitude<input type="number" step="0.000001" value={sessionForm.longitude} onChange={e=>setSessionForm({...sessionForm, longitude: parseFloat(e.target.value||'0')})} /></label>
