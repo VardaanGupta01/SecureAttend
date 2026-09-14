@@ -4,6 +4,7 @@ import { CourseClass } from '../models/CourseClass.js';
 import { User } from '../models/User.js';
 import { verifyLocation as checkLocation } from './locationService.js';
 import { verifyFace as checkFace } from './faceService.js';
+import { resolveClientMac, validateDeviceUsage } from './deviceService.js';
 import {
   SessionNotFoundException,
   SessionClosedException,
@@ -86,6 +87,29 @@ export async function initiateAttendance(request) {
     throw new InvalidQRCodeException(request.qrCodeOrCodeword);
   }
 
+  // --- ONE DEVICE, ONE ATTENDANCE VALIDATION ---
+  const deviceFingerprint = request.deviceFingerprint || null;
+  const clientIp = request.ipAddress || '127.0.0.1';
+  const deviceMac = await resolveClientMac(clientIp);
+
+  if (session.requireOneDevicePerStudent) {
+    const deviceCheck = validateDeviceUsage(session, student._id, deviceFingerprint, deviceMac);
+    if (deviceCheck.isBlocked) {
+      throw new Error(deviceCheck.reason);
+    }
+
+    // Register device to session
+    if (deviceFingerprint && !session.usedDeviceFingerprints.includes(deviceFingerprint)) {
+      session.usedDeviceFingerprints.push(deviceFingerprint);
+      session.deviceStudentMap.set(deviceFingerprint, { studentId: student._id, studentName: student.name });
+    }
+    if (deviceMac && deviceMac !== '00:00:00:00:00:00' && !session.usedDeviceMacs.includes(deviceMac)) {
+      session.usedDeviceMacs.push(deviceMac);
+      session.deviceStudentMap.set(deviceMac, { studentId: student._id, studentName: student.name });
+    }
+    await session.save();
+  }
+
   const now = new Date();
   const attendance = new Attendance({
     studentId: student._id,
@@ -93,14 +117,16 @@ export async function initiateAttendance(request) {
     sessionId: session._id,
     classId: session.classId,
     deviceInfo: request.deviceInfo,
-    ipAddress: request.ipAddress,
+    deviceFingerprint,
+    deviceMacAddress: deviceMac,
+    ipAddress: clientIp,
     checkInTime: now,
     qrVerified: true,
     qrVerifiedAt: now,
     currentStep: 'QR_VERIFIED',
     verificationLayersPassed: ['QR_CODE'],
     verificationDetails: new Map([
-      ['QR_CODE', { passed: true, message: 'QR code verified successfully', timestamp: now, metadata: {} }],
+      ['QR_CODE', { passed: true, message: 'QR code verified successfully', timestamp: now, metadata: { deviceFingerprint, deviceMac } }],
     ]),
   });
 
@@ -141,11 +167,19 @@ export async function verifyLocation(request) {
     throw new InvalidVerificationStepException(attendance.currentStep, 'LOCATION_VERIFICATION');
   }
 
-  const result = checkLocation(request.latitude, request.longitude, request.wifiSSID, session);
+  const result = checkLocation(
+    request.latitude,
+    request.longitude,
+    request.wifiSSID,
+    session,
+    request.networkId,
+    request.studentIp || attendance.ipAddress
+  );
 
   attendance.studentLatitude = request.latitude;
   attendance.studentLongitude = request.longitude;
   attendance.studentWifiSSID = request.wifiSSID;
+  if (request.networkId) attendance.studentNetworkId = request.networkId;
   attendance.locationVerifiedAt = new Date();
 
   if (result.success) {

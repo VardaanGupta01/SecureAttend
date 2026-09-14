@@ -10,6 +10,7 @@ import { Session } from '../models/Session.js';
 
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { getActiveInterfaceDetails, calculateNetworkId } from '../utils/networkUtils.js';
 
 const execPromise = util.promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
@@ -69,30 +70,57 @@ router.get(
   asyncHandler(async (req, res) => {
     const { sessionId } = req.query;
     let requiredSSID = null;
+    let requiredNetworkId = null;
+    let requiredSubnetMask = '255.255.255.0';
     let wifiRequired = false;
+    let subnetRequired = false;
 
     if (sessionId) {
       const session = await Session.findById(sessionId);
       if (session) {
         if (session.wifiSSID) requiredSSID = session.wifiSSID;
+        if (session.networkId) requiredNetworkId = session.networkId;
+        if (session.subnetMask) requiredSubnetMask = session.subnetMask;
         wifiRequired = Boolean(session.requireWifi || session.wifiSSID);
+        subnetRequired = Boolean(session.requireSubnetCheck && session.networkId);
       }
     }
 
     const systemSsid = await detectSystemWifiSSID();
-    const clientIp = req.ip || req.connection?.remoteAddress || '127.0.0.1';
+    const activeInterface = getActiveInterfaceDetails();
+    const rawIp = req.ip || req.connection?.remoteAddress || '127.0.0.1';
+    const clientIp = rawIp.replace(/^::ffff:/, '');
 
-    // Truly detected SSID from local network interface
+    // Compute student's Network ID using client IP (or active interface IP if loopback)
+    const effectiveIp = (clientIp === '127.0.0.1' || clientIp === '::1') && activeInterface ? activeInterface.ip : clientIp;
+    const effectiveSubnetMask = activeInterface ? activeInterface.netmask : requiredSubnetMask;
+    const clientNetInfo = calculateNetworkId(effectiveIp, effectiveSubnetMask);
+
     const detectedSSID = systemSsid || '';
+    const isSsidMatch = requiredSSID
+      ? detectedSSID.trim().toLowerCase() === requiredSSID.trim().toLowerCase()
+      : true;
+
+    // Subnet matching: verify client Network ID against session required Network ID
+    const isSubnetMatch = requiredNetworkId
+      ? clientNetInfo.cidr === requiredNetworkId || clientNetInfo.networkAddress === requiredNetworkId.split('/')[0]
+      : true;
 
     res.json(
       success({
         detectedSSID,
         requiredSSID,
         wifiRequired,
-        clientIp,
+        subnetRequired,
+        clientIp: effectiveIp,
+        subnetMask: effectiveSubnetMask,
+        networkId: clientNetInfo.cidr,
+        requiredNetworkId,
+        requiredSubnetMask,
         isAutoDetected: Boolean(systemSsid),
-        isMatch: requiredSSID ? detectedSSID.trim().toLowerCase() === requiredSSID.trim().toLowerCase() : true,
+        isSsidMatch,
+        isSubnetMatch,
+        isMatch: isSsidMatch && isSubnetMatch,
       })
     );
   })

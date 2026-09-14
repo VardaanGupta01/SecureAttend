@@ -3,6 +3,7 @@ import { generateCodeword, generateQrToken } from '../utils/codeFactory.js';
 import { generateQRCodeImage } from '../utils/qrService.js';
 import { CourseClass } from '../models/CourseClass.js';
 import { Session } from '../models/Session.js';
+import { getActiveInterfaceDetails } from '../utils/networkUtils.js';
 
 export async function createSession(request) {
   const courseClass = await CourseClass.findById(request.classId);
@@ -22,6 +23,20 @@ export async function createSession(request) {
   const expiresAt = new Date(now.getTime() + config.session.qrExpiryMinutes * 60 * 1000);
   const endTime = new Date(now.getTime() + (request.durationMinutes || 120) * 60 * 1000);
 
+  const requireWifi = request.requireWifi ?? Boolean(request.wifiSSID);
+  const requireSubnetCheck = request.requireSubnetCheck ?? (requireWifi ? true : false);
+
+  let networkId = request.networkId;
+  let subnetMask = request.subnetMask || '255.255.255.0';
+
+  if (requireSubnetCheck && !networkId) {
+    const activeNet = getActiveInterfaceDetails();
+    if (activeNet) {
+      networkId = activeNet.networkId;
+      subnetMask = activeNet.netmask;
+    }
+  }
+
   const session = new Session({
     classId: request.classId,
     qrToken,
@@ -31,9 +46,13 @@ export async function createSession(request) {
     latitude: request.latitude,
     longitude: request.longitude,
     wifiSSID: request.wifiSSID,
+    subnetMask,
+    networkId,
     allowedRadiusMeters: request.allowedRadiusMeters ?? 50,
     requireLocation: request.requireLocation ?? true,
-    requireWifi: request.requireWifi ?? Boolean(request.wifiSSID),
+    requireWifi,
+    requireSubnetCheck,
+    requireOneDevicePerStudent: request.requireOneDevicePerStudent ?? true,
     requireFace: false,
     requireProfessorVerification: request.requireProfessorVerification ?? true,
     requireTAVerification: request.requireTAVerification ?? true,
@@ -132,6 +151,10 @@ export async function updateSession(sessionId, request) {
   }
   if (request.requireLocation != null) session.requireLocation = request.requireLocation;
   if (request.requireWifi != null) session.requireWifi = request.requireWifi;
+  if (request.requireSubnetCheck != null) session.requireSubnetCheck = request.requireSubnetCheck;
+  if (request.requireOneDevicePerStudent != null) session.requireOneDevicePerStudent = request.requireOneDevicePerStudent;
+  if (request.networkId != null) session.networkId = request.networkId;
+  if (request.subnetMask != null) session.subnetMask = request.subnetMask;
   if (request.requireFace != null) session.requireFace = request.requireFace;
   if (request.requireProfessorVerification != null) session.requireProfessorVerification = request.requireProfessorVerification;
   if (request.requireTAVerification != null) session.requireTAVerification = request.requireTAVerification;

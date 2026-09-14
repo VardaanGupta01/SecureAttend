@@ -1,8 +1,9 @@
 import React, { useState, useEffect, Suspense } from "react";
-import { QrCode, MapPin, CheckCircle, TrendingUp, X, Loader2, GraduationCap, Wifi, RefreshCw } from "lucide-react";
+import { QrCode, MapPin, CheckCircle, TrendingUp, X, Loader2, GraduationCap, Wifi, RefreshCw, Smartphone, ShieldAlert } from "lucide-react";
 import api from '../config/api';
 import DashboardLayout from './layout/DashboardLayout';
 import StatusBadge from './ui/StatusBadge';
+import { getDeviceFingerprint } from '../utils/deviceFingerprint';
 
 const QrScanner = React.lazy(() =>
   import("react-qr-scanner").then((mod: any) => ({
@@ -44,6 +45,14 @@ const StudentPortal: React.FC = () => {
     detectedSSID: string;
     requiredSSID: string | null;
     wifiRequired: boolean;
+    subnetRequired?: boolean;
+    clientIp?: string;
+    subnetMask?: string;
+    networkId?: string;
+    requiredNetworkId?: string | null;
+    requiredSubnetMask?: string;
+    isSsidMatch?: boolean;
+    isSubnetMatch?: boolean;
     isMatch: boolean;
   } | null>(null);
   const [attendance, setAttendance] = useState<Attendance[]>([]);
@@ -55,6 +64,7 @@ const StudentPortal: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [verificationSteps, setVerificationSteps] = useState<string[]>(["QR/Codeword"]);
   const [userProfilePicture, setUserProfilePicture] = useState<string | null>(null);
+  const [deviceId] = useState<string>(() => getDeviceFingerprint());
 
   const detectWifiNetwork = async (targetSessionId?: string) => {
     const sId = targetSessionId !== undefined ? targetSessionId : sessionId;
@@ -165,6 +175,7 @@ const StudentPortal: React.FC = () => {
         studentId,
         sessionId,
         qrCodeOrCodeword: qrOrCodeword,
+        deviceFingerprint: deviceId,
         deviceInfo: navigator.userAgent,
         ipAddress: "127.0.0.1",
       });
@@ -228,6 +239,8 @@ const StudentPortal: React.FC = () => {
         latitude,
         longitude,
         wifiSSID: wifiSsid.trim() || undefined,
+        networkId: detectedWifiInfo?.networkId,
+        studentIp: detectedWifiInfo?.clientIp,
       });
       
       const updated = response.data?.data || response.data;
@@ -261,6 +274,10 @@ const StudentPortal: React.FC = () => {
             <div className="info-box" style={{ marginBottom: 16 }}>
               <div><strong>Session ID:</strong> {sessionId}</div>
               <div style={{ marginTop: 4 }}><strong>QR/Codeword:</strong> {qrOrCodeword}</div>
+              <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Smartphone size={14} color="#6366f1" />
+                <span><strong>Hardware Device ID:</strong> <code style={{ color: '#4f46e5' }}>{deviceId}</code></span>
+              </div>
             </div>
             <button type="button" className="btn primary full" onClick={proceedToNextStep} disabled={loading}>
               {loading ? 'Verifying…' : 'Verify QR / Codeword'}
@@ -332,11 +349,41 @@ const StudentPortal: React.FC = () => {
                 SSID is automatically verified from your device interface to prevent bypass spoofing.
               </div>
             </div>
+            <div className="form-field" style={{ marginTop: 12 }}>
+              <label style={{ margin: 0, fontWeight: 600 }}>Local Network ID & Subnet (Anti-Rogue AP)</label>
+              <input
+                className="form-input"
+                value={detectedWifiInfo?.networkId ? `${detectedWifiInfo.networkId} (Mask: ${detectedWifiInfo.subnetMask || '255.255.255.0'})` : 'Detecting network ID…'}
+                readOnly
+                style={{
+                  backgroundColor: 'rgba(243, 244, 246, 0.7)',
+                  cursor: 'not-allowed',
+                  fontWeight: 500,
+                  fontSize: '0.85rem',
+                }}
+              />
+              {detectedWifiInfo?.subnetRequired && (
+                <div style={{ marginTop: 4, fontSize: '0.8rem' }}>
+                  {detectedWifiInfo.isSubnetMatch ? (
+                    <span style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <CheckCircle size={14} /> Subnet matched: {detectedWifiInfo.requiredNetworkId} (Anti-Rogue AP verified)
+                    </span>
+                  ) : (
+                    <span style={{ color: '#dc2626', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <X size={14} /> Rogue AP / Subnet Mismatch: Connected to {detectedWifiInfo.networkId}, classroom requires {detectedWifiInfo.requiredNetworkId}
+                    </span>
+                  )}
+                </div>
+              )}
+              <div className="form-hint" style={{ marginTop: 4 }}>
+                Validates Layer 3 Subnet ID to prevent proxy students from spoofing renamed cellular hotspots.
+              </div>
+            </div>
             <button
               type="button"
               className="btn primary full"
               onClick={proceedToNextStep}
-              disabled={loading || (detectedWifiInfo?.wifiRequired ? !wifiSsid.trim() : false)}
+              disabled={loading || (detectedWifiInfo?.wifiRequired && !wifiSsid.trim()) || (detectedWifiInfo?.subnetRequired && !detectedWifiInfo.isSubnetMatch)}
             >
               <CheckCircle size={16} /> {loading ? 'Verifying…' : 'Verify & Mark Attendance'}
             </button>
@@ -418,10 +465,18 @@ const StudentPortal: React.FC = () => {
               <QrCode size={16} /> Scan QR Code
             </button>
             <div className="info-box" style={{ marginTop: 16 }}>
-              <div className="info-box-title">Current Location</div>
+              <div className="info-box-title">Current Location, Network & Device</div>
               <div><strong>Latitude:</strong> {latitude?.toFixed(4)}</div>
               <div><strong>Longitude:</strong> {longitude?.toFixed(4)}</div>
               <div><strong>Wi-Fi:</strong> {wifiSsid ? <span style={{ color: '#059669', fontWeight: 600 }}>{wifiSsid} (Auto-detected)</span> : "Not detected"}</div>
+              <div><strong>Network ID:</strong> {detectedWifiInfo?.networkId ? <span style={{ color: '#2563eb', fontWeight: 600 }}>{detectedWifiInfo.networkId}</span> : "Detecting…"}</div>
+              <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Smartphone size={14} color="#6366f1" />
+                <span><strong>Hardware Device ID:</strong> <code style={{ color: '#4f46e5', fontWeight: 600 }}>{deviceId}</code></span>
+              </div>
+              <div className="form-hint" style={{ marginTop: 4, fontSize: '0.75rem' }}>
+                Bound to your account for this session. Anti-proxy policy prevents sharing devices.
+              </div>
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { config } from '../config/index.js';
+import { calculateNetworkId } from '../utils/networkUtils.js';
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371000;
@@ -13,7 +14,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-export function verifyLocation(studentLat, studentLon, studentWifi, session) {
+export function verifyLocation(studentLat, studentLon, studentWifi, session, studentNetworkId = null, studentIp = null) {
   if (!session.requireLocation) {
     return { success: true, message: 'Location verification not required', metadata: { skipped: true } };
   }
@@ -38,6 +39,7 @@ export function verifyLocation(studentLat, studentLon, studentWifi, session) {
     };
   }
 
+  // 1. Wi-Fi SSID Verification
   if (session.requireWifi || session.wifiSSID) {
     if (!studentWifi || !studentWifi.trim()) {
       return { success: false, message: 'Classroom Wi-Fi network not detected. Connect to classroom Wi-Fi.', errorCode: 'MISSING_WIFI_SSID', metadata: { distance } };
@@ -52,9 +54,35 @@ export function verifyLocation(studentLat, studentLon, studentWifi, session) {
     }
   }
 
+  // 2. Subnet Mask & Network ID (CIDR) Verification (Anti-Rogue AP / Anti-Hotspot Spoofing)
+  if (session.requireSubnetCheck && session.networkId) {
+    let computedNetworkId = studentNetworkId;
+    if (!computedNetworkId && studentIp) {
+      computedNetworkId = calculateNetworkId(studentIp, session.subnetMask || '255.255.255.0').cidr;
+    }
+
+    if (computedNetworkId) {
+      const requiredNet = session.networkId.trim();
+      const studentNet = computedNetworkId.trim();
+      const isSubnetMatch = studentNet === requiredNet || studentNet.split('/')[0] === requiredNet.split('/')[0];
+      if (!isSubnetMatch) {
+        return {
+          success: false,
+          message: `Rogue AP / Subnet Mismatch: Connected to subnet '${studentNet}' instead of classroom subnet '${requiredNet}'. Access point spoofing prevented.`,
+          errorCode: 'SUBNET_MISMATCH_ROGUE_AP',
+          metadata: { distance, studentNetworkId: studentNet, expectedNetworkId: requiredNet },
+        };
+      }
+    }
+  }
+
   return {
     success: true,
-    message: `Location verified: ${distance.toFixed(1)} meters from classroom`,
-    metadata: { distance, wifiMatched: session.wifiSSID ? studentWifi.trim().toLowerCase() === session.wifiSSID.trim().toLowerCase() : true },
+    message: `Location & Network verified: ${distance.toFixed(1)} meters from classroom`,
+    metadata: {
+      distance,
+      wifiMatched: session.wifiSSID ? studentWifi.trim().toLowerCase() === session.wifiSSID.trim().toLowerCase() : true,
+      subnetMatched: Boolean(session.requireSubnetCheck && session.networkId),
+    },
   };
 }

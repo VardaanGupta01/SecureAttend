@@ -44,6 +44,9 @@ interface SessionItem {
   requireProfessorVerification?: boolean;
   requireLocation?: boolean;
   requireWifi?: boolean;
+  requireSubnetCheck?: boolean;
+  networkId?: string;
+  subnetMask?: string;
   requireTAVerification?: boolean;
   latitude?: number;
   longitude?: number;
@@ -62,6 +65,8 @@ interface Attendance {
   professorVerified?: boolean;
   flaggedProxy?: boolean;
   studentProfilePic?: string;
+  deviceFingerprint?: string;
+  deviceMacAddress?: string;
 }
 
 interface Student {
@@ -127,6 +132,8 @@ const ProfessorDashboard: React.FC = () => {
 
   const [sessionForm, setSessionForm] = useState<any>({
     latitude: 0, longitude: 0, wifiSSID: "",
+    networkId: "", subnetMask: "255.255.255.0", requireSubnetCheck: true,
+    requireOneDevicePerStudent: true,
     allowedRadiusMeters: 50, durationMinutes: 120, requireLocation: true,
     requireWifi: true, requireProfessorVerification: true, requireTAVerification: false
   });
@@ -139,8 +146,18 @@ const ProfessorDashboard: React.FC = () => {
       const res = await api.get('/student/detect-network');
       const data = res.data?.data || res.data;
       if (data?.detectedSSID) {
-        setSessionForm((prev: any) => ({ ...prev, wifiSSID: data.detectedSSID, requireWifi: true }));
-        setFlashMessage({ type: 'success', text: `Auto-filled Wi-Fi network: ${data.detectedSSID}` });
+        setSessionForm((prev: any) => ({
+          ...prev,
+          wifiSSID: data.detectedSSID,
+          networkId: data.networkId || prev.networkId,
+          subnetMask: data.subnetMask || prev.subnetMask,
+          requireWifi: true,
+          requireSubnetCheck: true,
+        }));
+        setFlashMessage({
+          type: 'success',
+          text: `Auto-filled Wi-Fi: ${data.detectedSSID} (Subnet: ${data.networkId || 'N/A'})`,
+        });
       } else {
         setFlashMessage({ type: 'info', text: 'No active Wi-Fi detected on this host.' });
       }
@@ -157,8 +174,18 @@ const ProfessorDashboard: React.FC = () => {
       const res = await api.get('/student/detect-network');
       const data = res.data?.data || res.data;
       if (data?.detectedSSID) {
-        setEditSessionForm((prev: any) => ({ ...prev, wifiSSID: data.detectedSSID, requireWifi: true }));
-        setFlashMessage({ type: 'success', text: `Auto-filled Wi-Fi network: ${data.detectedSSID}` });
+        setEditSessionForm((prev: any) => ({
+          ...prev,
+          wifiSSID: data.detectedSSID,
+          networkId: data.networkId || prev.networkId,
+          subnetMask: data.subnetMask || prev.subnetMask,
+          requireWifi: true,
+          requireSubnetCheck: true,
+        }));
+        setFlashMessage({
+          type: 'success',
+          text: `Auto-filled Wi-Fi: ${data.detectedSSID} (Subnet: ${data.networkId || 'N/A'})`,
+        });
       } else {
         setFlashMessage({ type: 'info', text: 'No active Wi-Fi detected on this host.' });
       }
@@ -229,6 +256,8 @@ const ProfessorDashboard: React.FC = () => {
 
   const [editSessionForm, setEditSessionForm] = useState<any>({
     latitude: 40.7128, longitude: -74.0060, wifiSSID: "",
+    networkId: "", subnetMask: "255.255.255.0", requireSubnetCheck: true,
+    requireOneDevicePerStudent: true,
     allowedRadiusMeters: 50, durationMinutes: 120, requireLocation: true,
     requireWifi: true, requireProfessorVerification: true, requireTAVerification: false
   });
@@ -733,6 +762,10 @@ const ProfessorDashboard: React.FC = () => {
           latitude: sessionData.latitude ?? 40.7128,
           longitude: sessionData.longitude ?? -74.0060,
           wifiSSID: sessionData.wifiSSID ?? "",
+          networkId: sessionData.networkId ?? "",
+          subnetMask: sessionData.subnetMask ?? "255.255.255.0",
+          requireSubnetCheck: sessionData.requireSubnetCheck ?? true,
+          requireOneDevicePerStudent: sessionData.requireOneDevicePerStudent ?? true,
           allowedRadiusMeters: sessionData.allowedRadiusMeters ?? 50,
           durationMinutes: durationMinutes,
           requireLocation: sessionData.requireLocation ?? true,
@@ -1031,6 +1064,11 @@ const ProfessorDashboard: React.FC = () => {
                                 <div style={{ flex: 1 }}>
                                   <div className="pi-name">{p.studentName}</div>
                                   <div className="pi-roll">{p.studentRollNumber || 'N/A'}</div>
+                                  {p.deviceFingerprint && (
+                                    <div style={{ fontSize: '0.72rem', color: '#6366f1', fontFamily: 'monospace', marginTop: 2 }}>
+                                      🔒 {p.deviceFingerprint.slice(0, 16)} {p.deviceMacAddress && p.deviceMacAddress !== '00:00:00:00:00:00' ? `(${p.deviceMacAddress})` : ''}
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="pi-actions">
                                   <button className="btn small success" onClick={() => verifyAttendance(p.id, true)}><CheckCircle /></button>
@@ -1049,6 +1087,11 @@ const ProfessorDashboard: React.FC = () => {
                               <div className="ai-name">{a.studentName}</div>
                               <div className="ai-roll">{a.studentRollNumber || 'N/A'}</div>
                               <div className="ai-step">{a.currentStep}</div>
+                              {a.deviceFingerprint && (
+                                <div style={{ fontSize: '0.72rem', color: '#6366f1', fontFamily: 'monospace', marginTop: 3 }}>
+                                  🔒 Dev: {a.deviceFingerprint} {a.deviceMacAddress && a.deviceMacAddress !== '00:00:00:00:00:00' ? `(${a.deviceMacAddress})` : ''}
+                                </div>
+                              )}
                             </div>
                             {selectedSession.requireProfessorVerification && (
                               <button className={`btn icon ${a.professorVerified ? 'success' : ''}`} onClick={() => verifyAttendance(a.id, !a.professorVerified)}>
@@ -1511,6 +1554,24 @@ const ProfessorDashboard: React.FC = () => {
               </div>
               <div className="grid-2">
                 <label>
+                  Network ID (CIDR Subnet)
+                  <input 
+                    value={sessionForm.networkId} 
+                    onChange={e=>setSessionForm({...sessionForm, networkId: e.target.value})} 
+                    placeholder="e.g., 10.50.100.0/24" 
+                  />
+                </label>
+                <label>
+                  Subnet Mask
+                  <input 
+                    value={sessionForm.subnetMask} 
+                    onChange={e=>setSessionForm({...sessionForm, subnetMask: e.target.value})} 
+                    placeholder="255.255.255.0" 
+                  />
+                </label>
+              </div>
+              <div className="grid-2">
+                <label>
                   Allowed Radius (meters)
                   <input 
                     type="number" 
@@ -1537,6 +1598,14 @@ const ProfessorDashboard: React.FC = () => {
                 <label className="checkbox-item">
                   <input type="checkbox" checked={sessionForm.requireWifi} onChange={e=>setSessionForm({...sessionForm, requireWifi: e.target.checked})} />
                   <span>Require Wi-Fi SSID Verification</span>
+                </label>
+                <label className="checkbox-item">
+                  <input type="checkbox" checked={sessionForm.requireSubnetCheck} onChange={e=>setSessionForm({...sessionForm, requireSubnetCheck: e.target.checked})} />
+                  <span>Verify Subnet Mask & Network ID (Anti-Rogue AP)</span>
+                </label>
+                <label className="checkbox-item">
+                  <input type="checkbox" checked={sessionForm.requireOneDevicePerStudent} onChange={e=>setSessionForm({...sessionForm, requireOneDevicePerStudent: e.target.checked})} />
+                  <span>Enforce One Device, One Attendance (Anti-Proxy Device Lock)</span>
                 </label>
                 <label className="checkbox-item">
                   <input type="checkbox" checked={sessionForm.requireProfessorVerification} onChange={e=>setSessionForm({...sessionForm, requireProfessorVerification: e.target.checked})} />
@@ -1619,6 +1688,24 @@ const ProfessorDashboard: React.FC = () => {
                   </div>
                   <div className="grid-2">
                     <label>
+                      Network ID (CIDR Subnet)
+                      <input 
+                        value={editSessionForm.networkId} 
+                        onChange={e=>setEditSessionForm({...editSessionForm, networkId: e.target.value})} 
+                        placeholder="e.g., 10.50.100.0/24" 
+                      />
+                    </label>
+                    <label>
+                      Subnet Mask
+                      <input 
+                        value={editSessionForm.subnetMask} 
+                        onChange={e=>setEditSessionForm({...editSessionForm, subnetMask: e.target.value})} 
+                        placeholder="255.255.255.0" 
+                      />
+                    </label>
+                  </div>
+                  <div className="grid-2">
+                    <label>
                       Allowed Radius (meters)
                       <input 
                         type="number" 
@@ -1643,6 +1730,14 @@ const ProfessorDashboard: React.FC = () => {
                     <label className="checkbox-item">
                       <input type="checkbox" checked={editSessionForm.requireWifi} onChange={e=>setEditSessionForm({...editSessionForm, requireWifi: e.target.checked})} />
                       <span>Require Wi-Fi SSID Verification</span>
+                    </label>
+                    <label className="checkbox-item">
+                      <input type="checkbox" checked={editSessionForm.requireSubnetCheck} onChange={e=>setEditSessionForm({...editSessionForm, requireSubnetCheck: e.target.checked})} />
+                      <span>Verify Subnet Mask & Network ID (Anti-Rogue AP)</span>
+                    </label>
+                    <label className="checkbox-item">
+                      <input type="checkbox" checked={editSessionForm.requireOneDevicePerStudent} onChange={e=>setEditSessionForm({...editSessionForm, requireOneDevicePerStudent: e.target.checked})} />
+                      <span>Enforce One Device, One Attendance (Anti-Proxy Device Lock)</span>
                     </label>
                     <label className="checkbox-item">
                       <input type="checkbox" checked={editSessionForm.requireProfessorVerification} onChange={e=>setEditSessionForm({...editSessionForm, requireProfessorVerification: e.target.checked})} />

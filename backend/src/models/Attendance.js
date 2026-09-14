@@ -62,6 +62,8 @@ const attendanceSchema = new mongoose.Schema(
     professorVerifiedAt: Date,
     taVerifiedAt: Date,
     deviceInfo: String,
+    deviceFingerprint: String,
+    deviceMacAddress: String,
     ipAddress: String,
     notes: String,
     professorNotes: String,
