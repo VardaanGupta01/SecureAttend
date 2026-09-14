@@ -88,7 +88,8 @@ router.get(
 
     const systemSsid = await detectSystemWifiSSID();
     const activeInterface = getActiveInterfaceDetails();
-    const rawIp = req.ip || req.connection?.remoteAddress || '127.0.0.1';
+    const forwarded = req.headers['x-forwarded-for'];
+    const rawIp = forwarded ? forwarded.split(',')[0].trim() : (req.ip || req.connection?.remoteAddress || '127.0.0.1');
     const clientIp = rawIp.replace(/^::ffff:/, '');
 
     // Compute student's Network ID using client IP (or active interface IP if loopback)
