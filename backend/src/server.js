@@ -28,15 +28,15 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-app.get('/api/health', (_req, res) => {
+app.get(['/api/health', '/health'], (_req, res) => {
   res.json({ status: 'ok', service: 'SecureAttend Node API' });
 });
 
-app.use('/api/auth', authRouter);
-app.use('/api/professor/classes', classRouter);
-app.use('/api/professor', professorRouter);
-app.use('/api/student', studentRouter);
-app.use('/api/ta', taRouter);
+app.use(['/api/auth', '/auth'], authRouter);
+app.use(['/api/professor/classes', '/professor/classes'], classRouter);
+app.use(['/api/professor', '/professor'], professorRouter);
+app.use(['/api/student', '/student'], studentRouter);
+app.use(['/api/ta', '/ta'], taRouter);
 
 app.use((req, res) => {
   res.status(404).json(error(`Route not found: ${req.method} ${req.path}`, 'NOT_FOUND'));

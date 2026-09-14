@@ -29,7 +29,7 @@ GET /api/health
 
 ## Deployment
 
-Deploy as a standard Node.js web service (e.g. Render, Railway, Vercel).
+Deploy as a standard Node.js web service on Render
 Set `MONGODB_URI` in your hosting environment variables.
 Build command: `npm install`
 Start command: `node src/server.js`

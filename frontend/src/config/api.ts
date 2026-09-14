@@ -1,11 +1,12 @@
 import axios from 'axios';
 
-const isLocal =
-  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+// Read API URL from .env (Vite loads .env in development and .env.production in build)
+const rawBase = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api')
+  .trim()
+  .replace(/\/+$/, '');
 
-export const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ||
-  (isLocal ? 'http://localhost:8080/api' : 'https://oom-project-1.onrender.com/api');
+// Ensure /api suffix is always present
+export const API_BASE = rawBase.endsWith('/api') ? rawBase : `${rawBase}/api`;
 
 export const api = axios.create({
   baseURL: API_BASE,
