@@ -3,7 +3,7 @@
 [![Frontend](https://img.shields.io/badge/Frontend-React%2018%20%7C%20TypeScript%20%7C%20Vite%20%7C%20Tailwind-blue)](#frontend-architecture)
 [![Backend](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express%20%7C%20Mongoose-green)](#backend-architecture)
 [![Database](https://img.shields.io/badge/Database-MongoDB-darkgreen)](#database-schema)
-[![Deployment](https://img.shields.io/badge/Deploy-Docker%20%7C%20Render-informational)](#deployment)
+[![Deployment](https://img.shields.io/badge/Deploy-%20%7C%20Render-informational)](#deployment)
 
 A production-grade, anti-proxy web application engineered to eliminate attendance fraud in academic and institutional settings using a multi-factor verification pipeline (Dynamic QR, Geofencing, Biometric Liveness, and Dual-Check Professor Headcount).
 
