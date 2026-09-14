@@ -508,6 +508,10 @@ const ProfessorDashboard: React.FC = () => {
 
   const enrollStudent = async () => {
     if (!selectedClass) { setMessage({type:'error', text:'Select a class'}); return; }
+    if (!enrollForm.name.trim() || !enrollForm.rollNumber.trim() || !enrollForm.email.trim() || !enrollForm.password) {
+      setMessage({ type: 'error', text: 'Please fill in all required fields (Name, Roll Number, Email, Password)' });
+      return;
+    }
     try {
       const enrollmentData: any = {
         name: enrollForm.name,
@@ -593,6 +597,10 @@ const ProfessorDashboard: React.FC = () => {
   };
 
   const createTA = async () => {
+    if (!taForm.name.trim() || !taForm.taId.trim() || !taForm.email.trim() || !taForm.password) {
+      setMessage({ type: 'error', text: 'Please fill in all required fields (Name, TA ID, Email, Password)' });
+      return;
+    }
     try {
       const taData: any = {
         name: taForm.name,
@@ -1174,21 +1182,96 @@ const ProfessorDashboard: React.FC = () => {
             </div>
             <div className="modal-body">
               <div className="grid-2">
-                <label>Class Code<input value={classForm.code} onChange={e=>setClassForm({...classForm, code: e.target.value})} /></label>
-                <label>Credits<input type="number" value={classForm.credits} onChange={e=>setClassForm({...classForm, credits: parseInt(e.target.value||'0')})} /></label>
+                <label>
+                  Class Code
+                  <input 
+                    value={classForm.code} 
+                    onChange={e=>setClassForm({...classForm, code: e.target.value})} 
+                    placeholder="e.g., CS101" 
+                  />
+                </label>
+                <label>
+                  Credits
+                  <input 
+                    type="number" 
+                    value={classForm.credits} 
+                    onChange={e=>setClassForm({...classForm, credits: parseInt(e.target.value||'0')})} 
+                    placeholder="3" 
+                  />
+                </label>
               </div>
-              <label>Title<input value={classForm.title} onChange={e=>setClassForm({...classForm, title: e.target.value})} /></label>
-              <label>Description<textarea value={classForm.description} onChange={e=>setClassForm({...classForm, description: e.target.value})} /></label>
+              <label>
+                Course Title
+                <input 
+                  value={classForm.title} 
+                  onChange={e=>setClassForm({...classForm, title: e.target.value})} 
+                  placeholder="e.g., Introduction to Computer Science" 
+                />
+              </label>
+              <label>
+                Course Description
+                <textarea 
+                  value={classForm.description} 
+                  onChange={e=>setClassForm({...classForm, description: e.target.value})} 
+                  placeholder="Brief overview of course topics, syllabus, and objectives..." 
+                />
+              </label>
               <div className="grid-2">
-                <label>Semester<input value={classForm.semester} onChange={e=>setClassForm({...classForm, semester: e.target.value})} /></label>
-                <label>Schedule<input value={classForm.schedule} onChange={e=>setClassForm({...classForm, schedule: e.target.value})} /></label>
+                <label>
+                  Semester
+                  <input 
+                    value={classForm.semester} 
+                    onChange={e=>setClassForm({...classForm, semester: e.target.value})} 
+                    placeholder="e.g., Fall 2024" 
+                  />
+                </label>
+                <label>
+                  Lecture Schedule
+                  <input 
+                    value={classForm.schedule} 
+                    onChange={e=>setClassForm({...classForm, schedule: e.target.value})} 
+                    placeholder="e.g., Mon/Wed 10:00 - 11:30 AM" 
+                  />
+                </label>
               </div>
-              <label>Location<input value={classForm.location} onChange={e=>setClassForm({...classForm, location: e.target.value})} /></label>
+              <label>
+                Physical Classroom / Hall
+                <input 
+                  value={classForm.location} 
+                  onChange={e=>setClassForm({...classForm, location: e.target.value})} 
+                  placeholder="e.g., Room 301, Engineering Hall" 
+                />
+              </label>
               <div className="grid-2">
-                <label>Latitude<input type="number" step="0.000001" value={classForm.latitude} onChange={e=>setClassForm({...classForm, latitude: parseFloat(e.target.value||'0')})} /></label>
-                <label>Longitude<input type="number" step="0.000001" value={classForm.longitude} onChange={e=>setClassForm({...classForm, longitude: parseFloat(e.target.value||'0')})} /></label>
+                <label>
+                  Classroom Latitude
+                  <input 
+                    type="number" 
+                    step="0.000001" 
+                    value={classForm.latitude} 
+                    onChange={e=>setClassForm({...classForm, latitude: parseFloat(e.target.value||'0')})} 
+                    placeholder="e.g., 25.4299" 
+                  />
+                </label>
+                <label>
+                  Classroom Longitude
+                  <input 
+                    type="number" 
+                    step="0.000001" 
+                    value={classForm.longitude} 
+                    onChange={e=>setClassForm({...classForm, longitude: parseFloat(e.target.value||'0')})} 
+                    placeholder="e.g., 81.7712" 
+                  />
+                </label>
               </div>
-              <label>WiFi SSID<input value={classForm.wifiSSID} onChange={e=>setClassForm({...classForm, wifiSSID: e.target.value})} /></label>
+              <label>
+                Classroom Wi-Fi Network Name (SSID)
+                <input 
+                  value={classForm.wifiSSID} 
+                  onChange={e=>setClassForm({...classForm, wifiSSID: e.target.value})} 
+                  placeholder="e.g., Campus-WiFi" 
+                />
+              </label>
             </div>
             <div className="modal-footer">
               <button className="btn ghost" onClick={() => setShowCreateClassModal(false)}>Cancel</button>
@@ -1208,27 +1291,100 @@ const ProfessorDashboard: React.FC = () => {
             <div className="modal-body">
               {editingClass && (
                 <>
-                  <div className="class-info-box" style={{padding: '12px', background: '#f5f5f5', borderRadius: '8px', marginBottom: '16px'}}>
+                  <div className="info-box" style={{ marginBottom: '16px' }}>
                     <div><strong>Class ID:</strong> {editingClass.id?.slice(-8)}</div>
                     <div><strong>Current Code:</strong> {editingClass.code}</div>
                     <div><strong>Current Title:</strong> {editingClass.title}</div>
                   </div>
                   <div className="grid-2">
-                    <label>Class Code<input value={editClassForm.code} onChange={e=>setEditClassForm({...editClassForm, code: e.target.value})} /></label>
-                    <label>Credits<input type="number" value={editClassForm.credits} onChange={e=>setEditClassForm({...editClassForm, credits: parseInt(e.target.value||'0')})} /></label>
+                    <label>
+                      Class Code
+                      <input 
+                        value={editClassForm.code} 
+                        onChange={e=>setEditClassForm({...editClassForm, code: e.target.value})} 
+                        placeholder="e.g., CS101" 
+                      />
+                    </label>
+                    <label>
+                      Credits
+                      <input 
+                        type="number" 
+                        value={editClassForm.credits} 
+                        onChange={e=>setEditClassForm({...editClassForm, credits: parseInt(e.target.value||'0')})} 
+                        placeholder="3" 
+                      />
+                    </label>
                   </div>
-                  <label>Title<input value={editClassForm.title} onChange={e=>setEditClassForm({...editClassForm, title: e.target.value})} /></label>
-                  <label>Description<textarea value={editClassForm.description} onChange={e=>setEditClassForm({...editClassForm, description: e.target.value})} /></label>
+                  <label>
+                    Course Title
+                    <input 
+                      value={editClassForm.title} 
+                      onChange={e=>setEditClassForm({...editClassForm, title: e.target.value})} 
+                      placeholder="e.g., Introduction to Computer Science" 
+                    />
+                  </label>
+                  <label>
+                    Course Description
+                    <textarea 
+                      value={editClassForm.description} 
+                      onChange={e=>setEditClassForm({...editClassForm, description: e.target.value})} 
+                      placeholder="Course overview and objectives..." 
+                    />
+                  </label>
                   <div className="grid-2">
-                    <label>Semester<input value={editClassForm.semester} onChange={e=>setEditClassForm({...editClassForm, semester: e.target.value})} /></label>
-                    <label>Schedule<input value={editClassForm.schedule} onChange={e=>setEditClassForm({...editClassForm, schedule: e.target.value})} /></label>
+                    <label>
+                      Semester
+                      <input 
+                        value={editClassForm.semester} 
+                        onChange={e=>setEditClassForm({...editClassForm, semester: e.target.value})} 
+                        placeholder="e.g., Fall 2024" 
+                      />
+                    </label>
+                    <label>
+                      Lecture Schedule
+                      <input 
+                        value={editClassForm.schedule} 
+                        onChange={e=>setEditClassForm({...editClassForm, schedule: e.target.value})} 
+                        placeholder="e.g., Mon/Wed 10:00 - 11:30 AM" 
+                      />
+                    </label>
                   </div>
-                  <label>Location<input value={editClassForm.location} onChange={e=>setEditClassForm({...editClassForm, location: e.target.value})} /></label>
+                  <label>
+                    Physical Classroom / Hall
+                    <input 
+                      value={editClassForm.location} 
+                      onChange={e=>setEditClassForm({...editClassForm, location: e.target.value})} 
+                      placeholder="e.g., Room 301, Engineering Hall" 
+                    />
+                  </label>
                   <div className="grid-2">
-                    <label>Latitude<input type="number" step="0.000001" value={editClassForm.latitude} onChange={e=>setEditClassForm({...editClassForm, latitude: parseFloat(e.target.value||'0')})} /></label>
-                    <label>Longitude<input type="number" step="0.000001" value={editClassForm.longitude} onChange={e=>setEditClassForm({...editClassForm, longitude: parseFloat(e.target.value||'0')})} /></label>
+                    <label>
+                      Classroom Latitude
+                      <input 
+                        type="number" 
+                        step="0.000001" 
+                        value={editClassForm.latitude} 
+                        onChange={e=>setEditClassForm({...editClassForm, latitude: parseFloat(e.target.value||'0')})} 
+                      />
+                    </label>
+                    <label>
+                      Classroom Longitude
+                      <input 
+                        type="number" 
+                        step="0.000001" 
+                        value={editClassForm.longitude} 
+                        onChange={e=>setEditClassForm({...editClassForm, longitude: parseFloat(e.target.value||'0')})} 
+                      />
+                    </label>
                   </div>
-                  <label>WiFi SSID<input value={editClassForm.wifiSSID} onChange={e=>setEditClassForm({...editClassForm, wifiSSID: e.target.value})} /></label>
+                  <label>
+                    Classroom Wi-Fi Network Name (SSID)
+                    <input 
+                      value={editClassForm.wifiSSID} 
+                      onChange={e=>setEditClassForm({...editClassForm, wifiSSID: e.target.value})} 
+                      placeholder="e.g., Campus-WiFi" 
+                    />
+                  </label>
                 </>
               )}
             </div>
@@ -1269,19 +1425,72 @@ const ProfessorDashboard: React.FC = () => {
                 </button>
               </div>
               <div className="grid-2">
-                <label>Latitude<input type="number" step="0.000001" value={sessionForm.latitude} onChange={e=>setSessionForm({...sessionForm, latitude: parseFloat(e.target.value||'0')})} /></label>
-                <label>Longitude<input type="number" step="0.000001" value={sessionForm.longitude} onChange={e=>setSessionForm({...sessionForm, longitude: parseFloat(e.target.value||'0')})} /></label>
+                <label>
+                  Session Latitude
+                  <input 
+                    type="number" 
+                    step="0.000001" 
+                    value={sessionForm.latitude} 
+                    onChange={e=>setSessionForm({...sessionForm, latitude: parseFloat(e.target.value||'0')})} 
+                    placeholder="e.g., 25.4299" 
+                  />
+                </label>
+                <label>
+                  Session Longitude
+                  <input 
+                    type="number" 
+                    step="0.000001" 
+                    value={sessionForm.longitude} 
+                    onChange={e=>setSessionForm({...sessionForm, longitude: parseFloat(e.target.value||'0')})} 
+                    placeholder="e.g., 81.7712" 
+                  />
+                </label>
               </div>
-              <label>WiFi SSID<input value={sessionForm.wifiSSID} onChange={e=>setSessionForm({...sessionForm, wifiSSID: e.target.value})} /></label>
+              <label>
+                Classroom Wi-Fi Network Name (SSID)
+                <input 
+                  value={sessionForm.wifiSSID} 
+                  onChange={e=>setSessionForm({...sessionForm, wifiSSID: e.target.value})} 
+                  placeholder="e.g., Campus-WiFi" 
+                />
+              </label>
               <div className="grid-2">
-                <label>Radius (meters)<input type="number" value={sessionForm.allowedRadiusMeters} onChange={e=>setSessionForm({...sessionForm, allowedRadiusMeters: parseFloat(e.target.value||'0')})} /></label>
-                <label>Duration (minutes)<input type="number" value={sessionForm.durationMinutes} onChange={e=>setSessionForm({...sessionForm, durationMinutes: parseInt(e.target.value||'0')})} /></label>
+                <label>
+                  Allowed Radius (meters)
+                  <input 
+                    type="number" 
+                    value={sessionForm.allowedRadiusMeters} 
+                    onChange={e=>setSessionForm({...sessionForm, allowedRadiusMeters: parseFloat(e.target.value||'0')})} 
+                    placeholder="50" 
+                  />
+                </label>
+                <label>
+                  Session Duration (minutes)
+                  <input 
+                    type="number" 
+                    value={sessionForm.durationMinutes} 
+                    onChange={e=>setSessionForm({...sessionForm, durationMinutes: parseInt(e.target.value||'0')})} 
+                    placeholder="30" 
+                  />
+                </label>
               </div>
               <div className="checkbox-grid">
-                <label><input type="checkbox" checked={sessionForm.requireLocation} onChange={e=>setSessionForm({...sessionForm, requireLocation: e.target.checked})} /> Require Location</label>
-                <label><input type="checkbox" checked={sessionForm.requireFace} onChange={e=>setSessionForm({...sessionForm, requireFace: e.target.checked})} /> Require Face Verification</label>
-                <label><input type="checkbox" checked={sessionForm.requireProfessorVerification} onChange={e=>setSessionForm({...sessionForm, requireProfessorVerification: e.target.checked})} /> Require Professor Verification</label>
-                <label><input type="checkbox" checked={sessionForm.requireTAVerification} onChange={e=>setSessionForm({...sessionForm, requireTAVerification: e.target.checked})} /> Require TA Verification</label>
+                <label className="checkbox-item">
+                  <input type="checkbox" checked={sessionForm.requireLocation} onChange={e=>setSessionForm({...sessionForm, requireLocation: e.target.checked})} />
+                  <span>Require Location Geofencing</span>
+                </label>
+                <label className="checkbox-item">
+                  <input type="checkbox" checked={sessionForm.requireFace} onChange={e=>setSessionForm({...sessionForm, requireFace: e.target.checked})} />
+                  <span>Require Face Verification</span>
+                </label>
+                <label className="checkbox-item">
+                  <input type="checkbox" checked={sessionForm.requireProfessorVerification} onChange={e=>setSessionForm({...sessionForm, requireProfessorVerification: e.target.checked})} />
+                  <span>Require Professor Dual-Check</span>
+                </label>
+                <label className="checkbox-item">
+                  <input type="checkbox" checked={sessionForm.requireTAVerification} onChange={e=>setSessionForm({...sessionForm, requireTAVerification: e.target.checked})} />
+                  <span>Require TA Verification</span>
+                </label>
               </div>
             </div>
             <div className="modal-footer">
@@ -1302,7 +1511,7 @@ const ProfessorDashboard: React.FC = () => {
             <div className="modal-body">
               {editingSession && (
                 <>
-                  <div className="session-info-box" style={{padding: '12px', background: '#f5f5f5', borderRadius: '8px', marginBottom: '16px'}}>
+                  <div className="info-box" style={{ marginBottom: '16px' }}>
                     <div><strong>Session ID:</strong> {editingSession.id?.slice(-8)}</div>
                     <div><strong>Status:</strong> {editingSession.status || 'N/A'}</div>
                     <div><strong>Codeword:</strong> <code>{editingSession.codeword}</code></div>
@@ -1310,19 +1519,67 @@ const ProfessorDashboard: React.FC = () => {
                     {editingSession.endTime && <div><strong>Ends:</strong> {new Date(editingSession.endTime).toLocaleString()}</div>}
                   </div>
                   <div className="grid-2">
-                    <label>Latitude<input type="number" step="0.000001" value={editSessionForm.latitude} onChange={e=>setEditSessionForm({...editSessionForm, latitude: parseFloat(e.target.value||'0')})} /></label>
-                    <label>Longitude<input type="number" step="0.000001" value={editSessionForm.longitude} onChange={e=>setEditSessionForm({...editSessionForm, longitude: parseFloat(e.target.value||'0')})} /></label>
+                    <label>
+                      Session Latitude
+                      <input 
+                        type="number" 
+                        step="0.000001" 
+                        value={editSessionForm.latitude} 
+                        onChange={e=>setEditSessionForm({...editSessionForm, latitude: parseFloat(e.target.value||'0')})} 
+                      />
+                    </label>
+                    <label>
+                      Session Longitude
+                      <input 
+                        type="number" 
+                        step="0.000001" 
+                        value={editSessionForm.longitude} 
+                        onChange={e=>setEditSessionForm({...editSessionForm, longitude: parseFloat(e.target.value||'0')})} 
+                      />
+                    </label>
                   </div>
-                  <label>WiFi SSID<input value={editSessionForm.wifiSSID} onChange={e=>setEditSessionForm({...editSessionForm, wifiSSID: e.target.value})} /></label>
+                  <label>
+                    Classroom Wi-Fi Network Name (SSID)
+                    <input 
+                      value={editSessionForm.wifiSSID} 
+                      onChange={e=>setEditSessionForm({...editSessionForm, wifiSSID: e.target.value})} 
+                    />
+                  </label>
                   <div className="grid-2">
-                    <label>Radius (meters)<input type="number" value={editSessionForm.allowedRadiusMeters} onChange={e=>setEditSessionForm({...editSessionForm, allowedRadiusMeters: parseFloat(e.target.value||'0')})} /></label>
-                    <label>Duration (minutes)<input type="number" value={editSessionForm.durationMinutes} onChange={e=>setEditSessionForm({...editSessionForm, durationMinutes: parseInt(e.target.value||'0')})} /></label>
+                    <label>
+                      Allowed Radius (meters)
+                      <input 
+                        type="number" 
+                        value={editSessionForm.allowedRadiusMeters} 
+                        onChange={e=>setEditSessionForm({...editSessionForm, allowedRadiusMeters: parseFloat(e.target.value||'0')})} 
+                      />
+                    </label>
+                    <label>
+                      Session Duration (minutes)
+                      <input 
+                        type="number" 
+                        value={editSessionForm.durationMinutes} 
+                        onChange={e=>setEditSessionForm({...editSessionForm, durationMinutes: parseInt(e.target.value||'0')})} 
+                      />
+                    </label>
                   </div>
                   <div className="checkbox-grid">
-                    <label><input type="checkbox" checked={editSessionForm.requireLocation} onChange={e=>setEditSessionForm({...editSessionForm, requireLocation: e.target.checked})} /> Require Location</label>
-                    <label><input type="checkbox" checked={editSessionForm.requireFace} onChange={e=>setEditSessionForm({...editSessionForm, requireFace: e.target.checked})} /> Require Face Verification</label>
-                    <label><input type="checkbox" checked={editSessionForm.requireProfessorVerification} onChange={e=>setEditSessionForm({...editSessionForm, requireProfessorVerification: e.target.checked})} /> Require Professor Verification</label>
-                    <label><input type="checkbox" checked={editSessionForm.requireTAVerification} onChange={e=>setEditSessionForm({...editSessionForm, requireTAVerification: e.target.checked})} /> Require TA Verification</label>
+                    <label className="checkbox-item">
+                      <input type="checkbox" checked={editSessionForm.requireLocation} onChange={e=>setEditSessionForm({...editSessionForm, requireLocation: e.target.checked})} />
+                      <span>Require Location Geofencing</span>
+                    </label>
+                    <label className="checkbox-item">
+                      <input type="checkbox" checked={editSessionForm.requireFace} onChange={e=>setEditSessionForm({...editSessionForm, requireFace: e.target.checked})} />
+                      <span>Require Face Verification</span>
+                    </label>
+                    <label className="checkbox-item">
+                      <input type="checkbox" checked={editSessionForm.requireProfessorVerification} onChange={e=>setEditSessionForm({...editSessionForm, requireProfessorVerification: e.target.checked})} />
+                      <span>Require Professor Dual-Check</span>
+                    </label>
+                    <label className="checkbox-item">
+                      <input type="checkbox" checked={editSessionForm.requireTAVerification} onChange={e=>setEditSessionForm({...editSessionForm, requireTAVerification: e.target.checked})} />
+                      <span>Require TA Verification</span>
+                    </label>
                   </div>
                 </>
               )}
@@ -1348,26 +1605,29 @@ const ProfessorDashboard: React.FC = () => {
       {showEnrollModal && selectedClass && (
         <div className="modal-overlay" onClick={()=>setShowEnrollModal(false)}>
           <div className="modal" onClick={(e)=>e.stopPropagation()}>
-            <div className="modal-header"><h4><UserPlus /> Enroll Student to {selectedClass.code}</h4><button className="icon-btn" onClick={()=>setShowEnrollModal(false)}><XCircle/></button></div>
+            <div className="modal-header">
+              <h4><UserPlus /> Enroll Student to {selectedClass.code}</h4>
+              <button className="icon-btn" onClick={()=>setShowEnrollModal(false)}><XCircle/></button>
+            </div>
             <div className="modal-body">
-              <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-                <label style={{ display: 'block', marginBottom: '10px', fontWeight: 600, color: '#0f172a' }}>
+              <div style={{ marginBottom: '18px', textAlign: 'center' }}>
+                <span style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>
                   Student Photo (Optional)
-                </label>
+                </span>
                 <div style={{ 
                   display: 'flex', 
                   flexDirection: 'column', 
                   alignItems: 'center', 
-                  gap: '12px',
-                  padding: '16px',
-                  border: '2px dashed rgba(102, 126, 234, 0.3)',
+                  gap: '10px',
+                  padding: '18px',
+                  border: '2px dashed rgba(102, 126, 234, 0.35)',
                   borderRadius: '12px',
-                  background: enrollForm.photoPreview ? 'transparent' : 'rgba(102, 126, 234, 0.02)',
+                  background: enrollForm.photoPreview ? '#ffffff' : 'rgba(102, 126, 234, 0.02)',
                   cursor: 'pointer',
                   transition: 'all 0.2s'
                 }}
                 onClick={() => document.getElementById('photo-upload')?.click()}
-                onMouseEnter={(e) => { if (!enrollForm.photoPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.05)'; }}
+                onMouseEnter={(e) => { if (!enrollForm.photoPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.06)'; }}
                 onMouseLeave={(e) => { if (!enrollForm.photoPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.02)'; }}
                 >
                   {enrollForm.photoPreview ? (
@@ -1376,12 +1636,12 @@ const ProfessorDashboard: React.FC = () => {
                         src={enrollForm.photoPreview} 
                         alt="Preview" 
                         style={{ 
-                          width: '120px', 
-                          height: '120px', 
+                          width: '110px', 
+                          height: '110px', 
                           borderRadius: '50%', 
                           objectFit: 'cover',
-                          border: '3px solid rgba(102, 126, 234, 0.2)',
-                          boxShadow: '0 4px 12px rgba(102, 126, 234, 0.15)'
+                          border: '3px solid rgba(102, 126, 234, 0.3)',
+                          boxShadow: '0 4px 14px rgba(102, 126, 234, 0.2)'
                         }} 
                       />
                       <button 
@@ -1391,19 +1651,19 @@ const ProfessorDashboard: React.FC = () => {
                           e.stopPropagation();
                           setEnrollForm({ ...enrollForm, photo: null, photoPreview: null });
                         }}
-                        style={{ marginTop: '8px' }}
+                        style={{ marginTop: '6px' }}
                       >
                         <XCircle style={{ width: '14px', height: '14px' }} /> Remove Photo
                       </button>
                     </>
                   ) : (
                     <>
-                      <Camera style={{ width: '48px', height: '48px', color: '#667eea', opacity: 0.6 }} />
-                      <div style={{ color: '#667eea', fontWeight: 500, fontSize: '14px' }}>
+                      <Camera style={{ width: '42px', height: '42px', color: '#667eea', opacity: 0.7 }} />
+                      <div style={{ color: '#667eea', fontWeight: 600, fontSize: '14px' }}>
                         Click to upload photo
                       </div>
                       <div style={{ color: 'var(--muted)', fontSize: '12px' }}>
-                        Max 5MB (Optional)
+                        PNG or JPG (Max 5MB)
                       </div>
                     </>
                   )}
@@ -1417,13 +1677,64 @@ const ProfessorDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <label>Name<input value={enrollForm.name} onChange={e=>setEnrollForm({...enrollForm, name: e.target.value})} /></label>
-              <label>Roll Number<input value={enrollForm.rollNumber} onChange={e=>setEnrollForm({...enrollForm, rollNumber: e.target.value})} /></label>
-              <label>Email<input value={enrollForm.email} onChange={e=>setEnrollForm({...enrollForm, email: e.target.value})} /></label>
-              <label>Password<input type="password" value={enrollForm.password} onChange={e=>setEnrollForm({...enrollForm, password: e.target.value})} /></label>
+              <label>
+                Full Name
+                <input 
+                  value={enrollForm.name} 
+                  onChange={e=>setEnrollForm({...enrollForm, name: e.target.value})} 
+                  placeholder="e.g., Alex Smith" 
+                />
+              </label>
+
+              <label>
+                Roll Number / Student ID
+                <input 
+                  value={enrollForm.rollNumber} 
+                  onChange={e=>setEnrollForm({...enrollForm, rollNumber: e.target.value})} 
+                  placeholder="e.g., S101 or 2024CS001" 
+                />
+              </label>
+
+              <label>
+                Email Address
+                <input 
+                  type="email" 
+                  value={enrollForm.email} 
+                  onChange={e=>setEnrollForm({...enrollForm, email: e.target.value})} 
+                  placeholder="e.g., alex.smith@campus.edu" 
+                />
+              </label>
+
+              <label>
+                Password
+                <input 
+                  type="password" 
+                  value={enrollForm.password} 
+                  onChange={e=>setEnrollForm({...enrollForm, password: e.target.value})} 
+                  placeholder="Create a student password" 
+                />
+              </label>
+
               <div className="grid-2">
-                <label>Major<input value={enrollForm.major} onChange={e=>setEnrollForm({...enrollForm, major: e.target.value})} /></label>
-                <label>Year<input type="number" value={enrollForm.year} onChange={e=>setEnrollForm({...enrollForm, year: parseInt(e.target.value||'0')})} /></label>
+                <label>
+                  Major
+                  <input 
+                    value={enrollForm.major} 
+                    onChange={e=>setEnrollForm({...enrollForm, major: e.target.value})} 
+                    placeholder="e.g., Computer Science" 
+                  />
+                </label>
+                <label>
+                  Academic Year
+                  <input 
+                    type="number" 
+                    min="1" 
+                    max="6" 
+                    value={enrollForm.year} 
+                    onChange={e=>setEnrollForm({...enrollForm, year: parseInt(e.target.value||'1')})} 
+                    placeholder="1" 
+                  />
+                </label>
               </div>
             </div>
             <div className="modal-footer">
@@ -1443,31 +1754,33 @@ const ProfessorDashboard: React.FC = () => {
           setTaForm({ name: '', taId: '', password: '', email: '', department: '', photo: null, photoPreview: null });
         }}>
           <div className="modal" onClick={(e)=>e.stopPropagation()}>
-            <div className="modal-header"><h4><GraduationCap /> Add Teaching Assistant</h4><button className="icon-btn" onClick={()=>{
-              setShowCreateTAModal(false);
-              setTaForm({ name: '', taId: '', password: '', email: '', department: '', photo: null, photoPreview: null });
-            }}><XCircle/></button></div>
+            <div className="modal-header">
+              <h4><GraduationCap /> Add Teaching Assistant</h4>
+              <button className="icon-btn" onClick={()=>{
+                setShowCreateTAModal(false);
+                setTaForm({ name: '', taId: '', password: '', email: '', department: '', photo: null, photoPreview: null });
+              }}><XCircle/></button>
+            </div>
             <div className="modal-body">
-              <label>Name<input value={taForm.name} onChange={e=>setTaForm({...taForm, name: e.target.value})} /></label>
-              <label>TA ID<input value={taForm.taId} onChange={e=>setTaForm({...taForm, taId: e.target.value})} /></label>
-              <label>Email<input value={taForm.email} onChange={e=>setTaForm({...taForm, email: e.target.value})} /></label>
-              <label>Password<input type="password" value={taForm.password} onChange={e=>setTaForm({...taForm, password: e.target.value})} /></label>
-              <label>Department<input value={taForm.department} onChange={e=>setTaForm({...taForm, department: e.target.value})} /></label>
-              <label>
-                Profile Picture (Optional)
+              <div style={{ marginBottom: '18px', textAlign: 'center' }}>
+                <span style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>
+                  Profile Picture (Optional)
+                </span>
                 <div style={{ 
                   display: 'flex', 
                   flexDirection: 'column', 
                   alignItems: 'center', 
-                  gap: '12px',
-                  padding: '16px',
-                  border: '2px dashed rgba(102, 126, 234, 0.3)',
-                  borderRadius: '8px',
-                  background: taForm.photoPreview ? 'transparent' : 'rgba(102, 126, 234, 0.02)',
+                  gap: '10px',
+                  padding: '18px',
+                  border: '2px dashed rgba(102, 126, 234, 0.35)',
+                  borderRadius: '12px',
+                  background: taForm.photoPreview ? '#ffffff' : 'rgba(102, 126, 234, 0.02)',
                   cursor: 'pointer',
-                  marginTop: '8px'
+                  transition: 'all 0.2s'
                 }}
                 onClick={() => document.getElementById('ta-photo-upload')?.click()}
+                onMouseEnter={(e) => { if (!taForm.photoPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.06)'; }}
+                onMouseLeave={(e) => { if (!taForm.photoPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.02)'; }}
                 >
                   {taForm.photoPreview ? (
                     <>
@@ -1479,7 +1792,8 @@ const ProfessorDashboard: React.FC = () => {
                           height: '100px', 
                           borderRadius: '50%', 
                           objectFit: 'cover',
-                          border: '2px solid rgba(102, 126, 234, 0.2)'
+                          border: '3px solid rgba(102, 126, 234, 0.3)',
+                          boxShadow: '0 4px 14px rgba(102, 126, 234, 0.2)'
                         }} 
                       />
                       <button 
@@ -1489,18 +1803,19 @@ const ProfessorDashboard: React.FC = () => {
                           e.stopPropagation();
                           setTaForm({...taForm, photo: null, photoPreview: null});
                         }}
+                        style={{ marginTop: '6px' }}
                       >
                         <XCircle style={{ width: '12px', height: '12px' }} /> Remove
                       </button>
                     </>
                   ) : (
                     <>
-                      <Camera style={{ width: '48px', height: '48px', color: '#667eea', opacity: 0.6 }} />
-                      <div style={{ color: '#667eea', fontWeight: 500, fontSize: '14px' }}>
+                      <Camera style={{ width: '42px', height: '42px', color: '#667eea', opacity: 0.7 }} />
+                      <div style={{ color: '#667eea', fontWeight: 600, fontSize: '14px' }}>
                         Click to upload photo
                       </div>
-                      <div style={{ color: 'var(--muted)', fontSize: '11px' }}>
-                        Max 5MB (Optional)
+                      <div style={{ color: 'var(--muted)', fontSize: '12px' }}>
+                        PNG or JPG (Max 5MB)
                       </div>
                     </>
                   )}
@@ -1526,6 +1841,53 @@ const ProfessorDashboard: React.FC = () => {
                     }}
                   />
                 </div>
+              </div>
+
+              <label>
+                Full Name
+                <input 
+                  value={taForm.name} 
+                  onChange={e=>setTaForm({...taForm, name: e.target.value})} 
+                  placeholder="e.g., Sarah Connor" 
+                />
+              </label>
+
+              <label>
+                TA Identification ID
+                <input 
+                  value={taForm.taId} 
+                  onChange={e=>setTaForm({...taForm, taId: e.target.value})} 
+                  placeholder="e.g., TA001 or TA_CS_01" 
+                />
+              </label>
+
+              <label>
+                Email Address
+                <input 
+                  type="email" 
+                  value={taForm.email} 
+                  onChange={e=>setTaForm({...taForm, email: e.target.value})} 
+                  placeholder="e.g., sarah.connor@campus.edu" 
+                />
+              </label>
+
+              <label>
+                Password
+                <input 
+                  type="password" 
+                  value={taForm.password} 
+                  onChange={e=>setTaForm({...taForm, password: e.target.value})} 
+                  placeholder="Create a password for this TA" 
+                />
+              </label>
+
+              <label>
+                Department / Faculty
+                <input 
+                  value={taForm.department} 
+                  onChange={e=>setTaForm({...taForm, department: e.target.value})} 
+                  placeholder="e.g., Computer Science & Engineering" 
+                />
               </label>
             </div>
             <div className="modal-footer">
