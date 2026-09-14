@@ -91,7 +91,7 @@ const ProfessorDashboard: React.FC = () => {
   const user = getUser();
   const professorId = user?.userId;
 
-  const [activeTab, setActiveTab] = useState<'sessions'|'students'|'tas'>('sessions');
+  const [activeTab, setActiveTab] = useState<'sessions' | 'students' | 'tas'>('sessions');
 
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
@@ -115,7 +115,7 @@ const ProfessorDashboard: React.FC = () => {
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [profileModalPreview, setProfileModalPreview] = useState<string | null>(null);
-  const [message, setMessage] = useState<{ type: 'success'|'error', text: string }|null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [headcount, setHeadcount] = useState<number>(0);
   const [editingSession, setEditingSession] = useState<SessionItem | null>(null);
   const [editingClass, setEditingClass] = useState<ClassItem | null>(null);
@@ -326,7 +326,7 @@ const ProfessorDashboard: React.FC = () => {
       await apiClient.post(`/professor/classes?professorId=${professorId}`, classForm);
       setMessage({ type: 'success', text: 'Class created successfully' });
       setShowCreateClassModal(false);
-      setClassForm({ code: '', title: '', description: '', semester: '', credits: 3, schedule:'', location:'', latitude:40.7128, longitude:-74.0060, wifiSSID:'Campus-WiFi' });
+      setClassForm({ code: '', title: '', description: '', semester: '', credits: 3, schedule: '', location: '', latitude: 40.7128, longitude: -74.0060, wifiSSID: 'Campus-WiFi' });
       loadClasses();
     } catch (err: any) {
       setMessage({ type: 'error', text: err?.response?.data?.message || 'Class creation failed' });
@@ -389,22 +389,22 @@ const ProfessorDashboard: React.FC = () => {
       setMessage({ type: 'error', text: 'Professor ID not found' });
       return;
     }
-    
+
     if (!window.confirm('Are you sure you want to delete this class? This will also delete all associated sessions. This action cannot be undone.')) {
       return;
     }
-    
+
     console.log('[deleteClass] Attempting to delete class:', classId, 'for professor:', professorId);
-    
+
     const classToDelete = classes.find(c => c.id === classId);
     setClasses(prev => prev.filter(c => c.id !== classId));
-    
+
     if (selectedClass?.id === classId) {
       setSelectedClass(null);
       setSessions([]);
       setSelectedSession(null);
     }
-    
+
     try {
       const response = await apiClient.delete(`/professor/classes/${classId}?professorId=${professorId}`);
       console.log('[deleteClass] Delete successful:', response.data);
@@ -437,7 +437,7 @@ const ProfessorDashboard: React.FC = () => {
   };
 
   const createSession = async () => {
-    if (!selectedClass) { setMessage({type:'error', text:'Select a class'}); return; }
+    if (!selectedClass) { setMessage({ type: 'error', text: 'Select a class' }); return; }
     try {
       const res = await apiClient.post(`/professor/classes/${selectedClass.id}/sessions`, sessionForm);
       const newSession = res.data?.data ?? res.data ?? null;
@@ -456,7 +456,7 @@ const ProfessorDashboard: React.FC = () => {
       const res = await apiClient.get(`/professor/sessions/${sessionId}/attendance`);
       const d = res.data?.data ?? res.data ?? [];
       const attendanceList = Array.isArray(d) ? d : [];
-      
+
       const attendanceWithPics = await Promise.all(
         attendanceList.map(async (att: Attendance) => {
           if (att.studentId) {
@@ -473,7 +473,7 @@ const ProfessorDashboard: React.FC = () => {
           return att;
         })
       );
-      
+
       setAttendance(attendanceWithPics);
     } catch (err) {
       console.error(err);
@@ -485,13 +485,13 @@ const ProfessorDashboard: React.FC = () => {
     try {
       const res = await apiClient.put(`/professor/sessions/${sessionId}/headcount?headcount=${headcount}`);
       const updatedSession = res.data?.data ?? res.data;
-      
+
       if (selectedSession && selectedSession.id === sessionId && updatedSession) {
         setSelectedSession(updatedSession);
       }
-      
+
       setSessions(prev => prev.map(s => s.id === sessionId ? (updatedSession || { ...s, professorHeadcount: headcount }) : s));
-      
+
       setMessage({ type: 'success', text: 'Headcount updated' });
       if (selectedClass) loadSessions(selectedClass.id);
     } catch (err) {
@@ -575,7 +575,7 @@ const ProfessorDashboard: React.FC = () => {
   };
 
   const enrollStudent = async () => {
-    if (!selectedClass) { setMessage({type:'error', text:'Select a class'}); return; }
+    if (!selectedClass) { setMessage({ type: 'error', text: 'Select a class' }); return; }
     if (!enrollForm.name.trim() || !enrollForm.rollNumber.trim() || !enrollForm.email.trim() || !enrollForm.password) {
       setMessage({ type: 'error', text: 'Please fill in all required fields (Name, Roll Number, Email, Password)' });
       return;
@@ -590,15 +590,15 @@ const ProfessorDashboard: React.FC = () => {
         year: enrollForm.year,
         classId: selectedClass.id
       };
-      
+
       if (enrollForm.photo) {
         enrollmentData.faceImageBase64 = enrollForm.photo;
       }
-      
+
       await apiClient.post('/auth/professor/enroll-student', enrollmentData);
       setMessage({ type: 'success', text: 'Student enrolled successfully' });
       setShowEnrollModal(false);
-      setEnrollForm({ name:'', rollNumber:'', password:'', email:'', major:'', year:1, photo: null, photoPreview: null });
+      setEnrollForm({ name: '', rollNumber: '', password: '', email: '', major: '', year: 1, photo: null, photoPreview: null });
       loadEnrolledStudents(selectedClass.id);
     } catch (err: any) {
       setMessage({ type: 'error', text: err?.response?.data?.message || 'Enrollment failed' });
@@ -610,7 +610,7 @@ const ProfessorDashboard: React.FC = () => {
       const res = await apiClient.get(`/professor/classes/${classId}/students`);
       const studentsData = res.data?.data ?? res.data ?? [];
       const studentsList = Array.isArray(studentsData) ? studentsData : [];
-      
+
       const studentsWithPics = await Promise.all(
         studentsList.map(async (student: Student) => {
           try {
@@ -625,7 +625,7 @@ const ProfessorDashboard: React.FC = () => {
           return student;
         })
       );
-      
+
       setEnrolledStudents(studentsWithPics);
     } catch (err) {
       console.error(err);
@@ -678,11 +678,11 @@ const ProfessorDashboard: React.FC = () => {
         department: taForm.department,
         supervisorProfessorId: professorId
       };
-      
+
       if (taForm.photo) {
         taData.profilePictureBase64 = taForm.photo;
       }
-      
+
       await apiClient.post('/auth/professor/create-ta', taData);
       setMessage({ type: 'success', text: 'TA created successfully' });
       setShowCreateTAModal(false);
@@ -698,7 +698,7 @@ const ProfessorDashboard: React.FC = () => {
       const res = await apiClient.get(`/professor/tas?professorId=${professorId}`);
       const tasData = res.data?.data ?? res.data ?? [];
       const tasList = Array.isArray(tasData) ? tasData : [];
-      
+
       const tasWithPics = await Promise.all(
         tasList.map(async (ta: TA) => {
           try {
@@ -713,7 +713,7 @@ const ProfessorDashboard: React.FC = () => {
           return ta;
         })
       );
-      
+
       setTAList(tasWithPics);
     } catch (err) {
       console.error(err);
@@ -750,14 +750,14 @@ const ProfessorDashboard: React.FC = () => {
       const sessionData = res.data?.data ?? res.data;
       if (sessionData) {
         setEditingSession(sessionData);
-        
+
         let durationMinutes = sessionData.durationMinutes ?? 120;
         if (sessionData.startTime && sessionData.endTime && !sessionData.durationMinutes) {
           const start = new Date(sessionData.startTime).getTime();
           const end = new Date(sessionData.endTime).getTime();
-          durationMinutes = Math.round((end - start) / (1000 * 60)); 
+          durationMinutes = Math.round((end - start) / (1000 * 60));
         }
-        
+
         setEditSessionForm({
           latitude: sessionData.latitude ?? 40.7128,
           longitude: sessionData.longitude ?? -74.0060,
@@ -858,355 +858,292 @@ const ProfessorDashboard: React.FC = () => {
         </>
       }
     >
-        <div className="pa-card">
-          <nav className="pa-tabs">
-            <button className={`pa-tab ${activeTab==='sessions' ? 'active':''}`} onClick={() => setActiveTab('sessions')}>
-              <BookOpen /> Classes & Sessions
-            </button>
-            <button className={`pa-tab ${activeTab==='students' ? 'active':''}`} onClick={() => setActiveTab('students')}>
-              <Users /> Students ({enrolledStudents.length})
-            </button>
-            <button className={`pa-tab ${activeTab==='tas' ? 'active':''}`} onClick={() => setActiveTab('tas')}>
-              <GraduationCap /> Teaching Assistants ({taList.length})
-            </button>
-          </nav>
+      <div className="pa-card">
+        <nav className="pa-tabs">
+          <button className={`pa-tab ${activeTab === 'sessions' ? 'active' : ''}`} onClick={() => setActiveTab('sessions')}>
+            <BookOpen /> Classes & Sessions
+          </button>
+          <button className={`pa-tab ${activeTab === 'students' ? 'active' : ''}`} onClick={() => setActiveTab('students')}>
+            <Users /> Students ({enrolledStudents.length})
+          </button>
+          <button className={`pa-tab ${activeTab === 'tas' ? 'active' : ''}`} onClick={() => setActiveTab('tas')}>
+            <GraduationCap /> Teaching Assistants ({taList.length})
+          </button>
+        </nav>
 
-          <div className="pa-content">
-            {activeTab === 'sessions' && (
-              <div className="pa-grid">
-                <aside className="pa-col pa-col-left">
-                  <div className="pa-section-title"><BookOpen /> My Classes</div>
-                  {classes.length === 0 ? (
-                    <div className="empty">No classes yet</div>
-                  ) : (
-                    <div className="class-list">
-                      {classes.map(cls => (
+        <div className="pa-content">
+          {activeTab === 'sessions' && (
+            <div className="pa-grid">
+              <aside className="pa-col pa-col-left">
+                <div className="pa-section-title"><BookOpen /> My Classes</div>
+                {classes.length === 0 ? (
+                  <div className="empty">No classes yet</div>
+                ) : (
+                  <div className="class-list">
+                    {classes.map(cls => (
+                      <div
+                        key={cls.id}
+                        className={`class-card ${selectedClass?.id === cls.id ? 'selected' : ''}`}
+                      >
                         <div
-                          key={cls.id}
-                          className={`class-card ${selectedClass?.id === cls.id ? 'selected' : ''}`}
+                          className="class-card-content"
+                          onClick={() => setSelectedClass(cls)}
                         >
-                          <div
-                            className="class-card-content"
-                            onClick={() => setSelectedClass(cls)}
+                          <div className="cc-code">{cls.code}</div>
+                          <div className="cc-title">{cls.title}</div>
+                        </div>
+                        <div className="class-card-actions" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            className="btn icon subtle"
+                            onClick={() => openTADetailsModal(cls)}
+                            title="View TA Details"
                           >
-                            <div className="cc-code">{cls.code}</div>
-                            <div className="cc-title">{cls.title}</div>
+                            <GraduationCap />
+                          </button>
+                          <button
+                            className="btn icon subtle"
+                            onClick={() => openEditClassModal(cls)}
+                            title="Edit Class"
+                          >
+                            <Edit />
+                          </button>
+                          <button
+                            className="btn icon danger"
+                            onClick={() => deleteClass(cls.id)}
+                            title="Delete Class"
+                          >
+                            <Trash2 />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </aside>
+
+              <main className="pa-col pa-col-center">
+                {selectedClass ? (
+                  <>
+                    <div className="pa-row pa-actions">
+                      <div className="pa-section-title"><Calendar /> Sessions</div>
+                      <div className="pa-action-buttons">
+                        <button className="btn subtle" onClick={() => { setAssignTAForm({ selectedTAs: selectedClass.taIds || [] }); setShowAssignTAModal(true); }}>
+                          <Settings /> Manage TAs
+                        </button>
+                        <button className="btn primary" onClick={openCreateSessionModal}><Plus /> New Session</button>
+                      </div>
+                    </div>
+
+                    <div className="class-info">
+                      <div className="ci-code">{selectedClass.code} - {selectedClass.title}</div>
+                      <div className="ci-location"><MapPin /> {selectedClass.location || 'Location not set'}</div>
+                    </div>
+
+                    {sessions.length === 0 ? (
+                      <div className="empty session-empty-cta">
+                        <QrCode size={40} style={{ opacity: 0.4, marginBottom: 12 }} />
+                        <p><strong>No active session yet</strong></p>
+                        <p style={{ fontSize: '0.9rem', marginTop: 8, opacity: 0.8 }}>
+                          Click the button below to start a session and get your QR code for students to scan.
+                        </p>
+                        <button
+                          className="btn primary"
+                          style={{ marginTop: 16 }}
+                          onClick={openCreateSessionModal}
+                        >
+                          <Plus /> Start Session &amp; Get QR Code
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="session-list">
+                        {sessions.map(session => {
+                          const st = getSessionStatus(session);
+                          const remaining = getRemainingTime(session);
+                          return (
+                            <div key={session.id} className="session-card">
+                              <div className="session-header">
+                                <div>
+                                  <div className="session-title">Session #{session.id?.slice(-6)}</div>
+                                  <div className="session-time"><Clock /> {remaining}</div>
+                                </div>
+                                <div className={`badge ${st.badgeClass}`}>{st.label}</div>
+                              </div>
+
+                              <div className="session-codeword">
+                                <div className="cw-label">Codeword</div>
+                                <div className="cw-value">{session.codeword}</div>
+                              </div>
+
+                              <div className="session-actions">
+                                <button className="btn subtle" onClick={() => { setSelectedSession(session); loadAttendance(session.id); }}>
+                                  <Eye /> View Attendance
+                                </button>
+                                <button className="btn subtle" onClick={() => openEditSessionModal(session)}>
+                                  <Edit /> Edit Session
+                                </button>
+                                <button className="btn primary" onClick={() => { setSelectedSession(session); setShowQRModal(true); }}>
+                                  <QrCode /> QR Code
+                                </button>
+                                <button className="btn danger" onClick={() => deleteSession(session.id)}>
+                                  <Trash2 /> Delete
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="empty large">Select a class to view sessions</div>
+                )}
+              </main>
+
+              <aside className="pa-col pa-col-right">
+                <div className="pa-section-title"><TrendingUp /> Live Attendance</div>
+
+                {!selectedSession ? (
+                  <div className="empty large">
+                    <p>No session selected</p>
+                    <p style={{ fontSize: '0.85rem', marginTop: 8, opacity: 0.75 }}>
+                      Start a session first — the QR code and live attendance will appear here.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="attendance-panel">
+                    <div className="stats-grid">
+                      <div className="stat-card stat-blue">
+                        <div className="stat-label">Current Count</div>
+                        <div className="stat-value">{attendance.length}</div>
+                      </div>
+                      <div className="stat-card stat-purple">
+                        <div className="stat-label">Headcount</div>
+                        <div className="stat-value">{selectedSession.professorHeadcount || 0}</div>
+                      </div>
+                    </div>
+
+                    <div className="headcount-row">
+                      <input type="number" value={headcount} onChange={(e) => setHeadcount(parseInt(e.target.value || '0'))} placeholder="Update headcount" />
+                      <button className="btn primary" onClick={() => updateHeadcount(selectedSession.id)}>Update</button>
+                    </div>
+
+                    {pendingApprovals.length > 0 && (
+                      <div className="pending">
+                        <div className="pending-header"><AlertCircle /> Pending Approvals ({pendingApprovals.length})</div>
+                        <div className="pending-list">
+                          {pendingApprovals.map(p => (
+                            <div key={p.id} className="pending-item" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              {p.studentProfilePic ? (
+                                <img
+                                  src={p.studentProfilePic}
+                                  alt={p.studentName}
+                                  style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    borderRadius: '50%',
+                                    objectFit: 'cover',
+                                    border: '2px solid rgba(102, 126, 234, 0.2)'
+                                  }}
+                                />
+                              ) : (
+                                <div style={{
+                                  width: '40px',
+                                  height: '40px',
+                                  borderRadius: '50%',
+                                  background: 'rgba(102, 126, 234, 0.1)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: '#667eea',
+                                  fontSize: '18px',
+                                  fontWeight: 'bold'
+                                }}>
+                                  {p.studentName?.charAt(0)?.toUpperCase() || '?'}
+                                </div>
+                              )}
+                              <div style={{ flex: 1 }}>
+                                <div className="pi-name">{p.studentName}</div>
+                                <div className="pi-roll">{p.studentRollNumber || 'N/A'}</div>
+                                {p.deviceFingerprint && (
+                                  <div style={{ fontSize: '0.72rem', color: '#6366f1', fontFamily: 'monospace', marginTop: 2 }}>
+                                    🔒 {p.deviceFingerprint.slice(0, 16)} {p.deviceMacAddress && p.deviceMacAddress !== '00:00:00:00:00:00' ? `(${p.deviceMacAddress})` : ''}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="pi-actions">
+                                <button className="btn small success" onClick={() => verifyAttendance(p.id, true)}><CheckCircle /></button>
+                                <button className="btn small danger" onClick={() => verifyAttendance(p.id, false)}><XCircle /></button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="list-attendance">
+                      {attendance.map(a => (
+                        <div key={a.id} className={`attendance-item ${a.professorVerified ? 'verified' : ''}`}>
+                          <div>
+                            <div className="ai-name">{a.studentName}</div>
+                            <div className="ai-roll">{a.studentRollNumber || 'N/A'}</div>
+                            <div className="ai-step">{a.currentStep}</div>
+                            {a.deviceFingerprint && (
+                              <div style={{ fontSize: '0.72rem', color: '#6366f1', fontFamily: 'monospace', marginTop: 3 }}>
+                                🔒 Dev: {a.deviceFingerprint} {a.deviceMacAddress && a.deviceMacAddress !== '00:00:00:00:00:00' ? `(${a.deviceMacAddress})` : ''}
+                              </div>
+                            )}
                           </div>
-                          <div className="class-card-actions" onClick={(e) => e.stopPropagation()}>
-                            <button 
-                              className="btn icon subtle" 
-                              onClick={() => openTADetailsModal(cls)}
-                              title="View TA Details"
-                            >
-                              <GraduationCap />
+                          {selectedSession.requireProfessorVerification && (
+                            <button className={`btn icon ${a.professorVerified ? 'success' : ''}`} onClick={() => verifyAttendance(a.id, !a.professorVerified)}>
+                              {a.professorVerified ? <CheckCircle /> : <XCircle />}
                             </button>
-                            <button 
-                              className="btn icon subtle" 
-                              onClick={() => openEditClassModal(cls)}
-                              title="Edit Class"
-                            >
-                              <Edit />
-                            </button>
-                            <button 
-                              className="btn icon danger" 
-                              onClick={() => deleteClass(cls.id)}
-                              title="Delete Class"
-                            >
-                              <Trash2 />
-                            </button>
-                          </div>
+                          )}
                         </div>
                       ))}
                     </div>
-                  )}
-                </aside>
-
-                <main className="pa-col pa-col-center">
-                  {selectedClass ? (
-                    <>
-                      <div className="pa-row pa-actions">
-                        <div className="pa-section-title"><Calendar /> Sessions</div>
-                        <div className="pa-action-buttons">
-                          <button className="btn subtle" onClick={() => { setAssignTAForm({selectedTAs: selectedClass.taIds || []}); setShowAssignTAModal(true); }}>
-                            <Settings /> Manage TAs
-                          </button>
-                          <button className="btn primary" onClick={openCreateSessionModal}><Plus /> New Session</button>
-                        </div>
-                      </div>
-
-                      <div className="class-info">
-                        <div className="ci-code">{selectedClass.code} - {selectedClass.title}</div>
-                        <div className="ci-location"><MapPin /> {selectedClass.location || 'Location not set'}</div>
-                      </div>
-
-                      {sessions.length === 0 ? (
-                        <div className="empty session-empty-cta">
-                          <QrCode size={40} style={{ opacity: 0.4, marginBottom: 12 }} />
-                          <p><strong>No active session yet</strong></p>
-                          <p style={{ fontSize: '0.9rem', marginTop: 8, opacity: 0.8 }}>
-                            Click the button below to start a session and get your QR code for students to scan.
-                          </p>
-                          <button
-                            className="btn primary"
-                            style={{ marginTop: 16 }}
-                            onClick={openCreateSessionModal}
-                          >
-                            <Plus /> Start Session &amp; Get QR Code
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="session-list">
-                          {sessions.map(session => {
-                            const st = getSessionStatus(session);
-                            const remaining = getRemainingTime(session);
-                            return (
-                              <div key={session.id} className="session-card">
-                                <div className="session-header">
-                                  <div>
-                                    <div className="session-title">Session #{session.id?.slice(-6)}</div>
-                                    <div className="session-time"><Clock /> {remaining}</div>
-                                  </div>
-                                  <div className={`badge ${st.badgeClass}`}>{st.label}</div>
-                                </div>
-
-                                <div className="session-codeword">
-                                  <div className="cw-label">Codeword</div>
-                                  <div className="cw-value">{session.codeword}</div>
-                                </div>
-
-                                <div className="session-actions">
-                                  <button className="btn subtle" onClick={() => { setSelectedSession(session); loadAttendance(session.id); }}>
-                                    <Eye /> View Attendance
-                                  </button>
-                                  <button className="btn subtle" onClick={() => openEditSessionModal(session)}>
-                                    <Edit /> Edit Session
-                                  </button>
-                                  <button className="btn primary" onClick={() => { setSelectedSession(session); setShowQRModal(true); }}>
-                                    <QrCode /> QR Code
-                                  </button>
-                                  <button className="btn danger" onClick={() => deleteSession(session.id)}>
-                                    <Trash2 /> Delete
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="empty large">Select a class to view sessions</div>
-                  )}
-                </main>
-
-                <aside className="pa-col pa-col-right">
-                  <div className="pa-section-title"><TrendingUp /> Live Attendance</div>
-
-                  {!selectedSession ? (
-                    <div className="empty large">
-                      <p>No session selected</p>
-                      <p style={{ fontSize: '0.85rem', marginTop: 8, opacity: 0.75 }}>
-                        Start a session first — the QR code and live attendance will appear here.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="attendance-panel">
-                      <div className="stats-grid">
-                        <div className="stat-card stat-blue">
-                          <div className="stat-label">Current Count</div>
-                          <div className="stat-value">{attendance.length}</div>
-                        </div>
-                        <div className="stat-card stat-purple">
-                          <div className="stat-label">Headcount</div>
-                          <div className="stat-value">{selectedSession.professorHeadcount || 0}</div>
-                        </div>
-                      </div>
-
-                      <div className="headcount-row">
-                        <input type="number" value={headcount} onChange={(e) => setHeadcount(parseInt(e.target.value || '0'))} placeholder="Update headcount" />
-                        <button className="btn primary" onClick={() => updateHeadcount(selectedSession.id)}>Update</button>
-                      </div>
-
-                      {pendingApprovals.length > 0 && (
-                        <div className="pending">
-                          <div className="pending-header"><AlertCircle /> Pending Approvals ({pendingApprovals.length})</div>
-                          <div className="pending-list">
-                            {pendingApprovals.map(p => (
-                              <div key={p.id} className="pending-item" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                {p.studentProfilePic ? (
-                                  <img 
-                                    src={p.studentProfilePic} 
-                                    alt={p.studentName} 
-                                    style={{ 
-                                      width: '40px', 
-                                      height: '40px', 
-                                      borderRadius: '50%', 
-                                      objectFit: 'cover',
-                                      border: '2px solid rgba(102, 126, 234, 0.2)'
-                                    }} 
-                                  />
-                                ) : (
-                                  <div style={{ 
-                                    width: '40px', 
-                                    height: '40px', 
-                                    borderRadius: '50%', 
-                                    background: 'rgba(102, 126, 234, 0.1)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: '#667eea',
-                                    fontSize: '18px',
-                                    fontWeight: 'bold'
-                                  }}>
-                                    {p.studentName?.charAt(0)?.toUpperCase() || '?'}
-                                  </div>
-                                )}
-                                <div style={{ flex: 1 }}>
-                                  <div className="pi-name">{p.studentName}</div>
-                                  <div className="pi-roll">{p.studentRollNumber || 'N/A'}</div>
-                                  {p.deviceFingerprint && (
-                                    <div style={{ fontSize: '0.72rem', color: '#6366f1', fontFamily: 'monospace', marginTop: 2 }}>
-                                      🔒 {p.deviceFingerprint.slice(0, 16)} {p.deviceMacAddress && p.deviceMacAddress !== '00:00:00:00:00:00' ? `(${p.deviceMacAddress})` : ''}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="pi-actions">
-                                  <button className="btn small success" onClick={() => verifyAttendance(p.id, true)}><CheckCircle /></button>
-                                  <button className="btn small danger" onClick={() => verifyAttendance(p.id, false)}><XCircle /></button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="list-attendance">
-                        {attendance.map(a => (
-                          <div key={a.id} className={`attendance-item ${a.professorVerified ? 'verified' : ''}`}>
-                            <div>
-                              <div className="ai-name">{a.studentName}</div>
-                              <div className="ai-roll">{a.studentRollNumber || 'N/A'}</div>
-                              <div className="ai-step">{a.currentStep}</div>
-                              {a.deviceFingerprint && (
-                                <div style={{ fontSize: '0.72rem', color: '#6366f1', fontFamily: 'monospace', marginTop: 3 }}>
-                                  🔒 Dev: {a.deviceFingerprint} {a.deviceMacAddress && a.deviceMacAddress !== '00:00:00:00:00:00' ? `(${a.deviceMacAddress})` : ''}
-                                </div>
-                              )}
-                            </div>
-                            {selectedSession.requireProfessorVerification && (
-                              <button className={`btn icon ${a.professorVerified ? 'success' : ''}`} onClick={() => verifyAttendance(a.id, !a.professorVerified)}>
-                                {a.professorVerified ? <CheckCircle /> : <XCircle />}
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </aside>
-              </div>
-            )}
-
-            {activeTab === 'students' && (
-              <div className="pa-section">
-                <div className="pa-section-top">
-                  <h3><Users /> Enrolled Students</h3>
-                  <div>
-                    <button className="btn primary" onClick={() => setShowEnrollModal(true)} disabled={!selectedClass}><UserPlus /> Enroll Student</button>
                   </div>
-                </div>
-
-                {!selectedClass ? <div className="empty large">Select a class to view students</div> : (
-                  enrolledStudents.length === 0 ? <div className="empty">No students enrolled</div> : (
-                    <div className="table-wrap">
-                      <table className="data-table">
-                        <thead>
-                          <tr><th>Photo</th><th>Roll Number</th><th>Name</th><th>Email</th><th>Major</th><th>Actions</th></tr>
-                        </thead>
-                        <tbody>
-                          {enrolledStudents.map(s => (
-                            <tr key={s.id}>
-                              <td>
-                                {s.faceImageBase64 ? (
-                                  <img 
-                                    src={s.faceImageBase64} 
-                                    alt={s.name} 
-                                    style={{ 
-                                      width: '40px', 
-                                      height: '40px', 
-                                      borderRadius: '50%', 
-                                      objectFit: 'cover',
-                                      border: '2px solid rgba(102, 126, 234, 0.2)'
-                                    }} 
-                                  />
-                                ) : (
-                                  <div style={{ 
-                                    width: '40px', 
-                                    height: '40px', 
-                                    borderRadius: '50%', 
-                                    background: 'rgba(102, 126, 234, 0.1)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: '#667eea',
-                                    fontSize: '16px',
-                                    fontWeight: 'bold'
-                                  }}>
-                                    {s.name?.charAt(0)?.toUpperCase() || '?'}
-                                  </div>
-                                )}
-                              </td>
-                              <td>{s.studentNumber || 'N/A'}</td>
-                              <td>{s.name || 'N/A'}</td>
-                              <td>{s.email || 'N/A'}</td>
-                              <td>{s.major || 'N/A'}</td>
-                              <td>
-                                <button 
-                                  className="btn icon danger small" 
-                                  onClick={() => unenrollStudent(s.id)}
-                                  title="Unenroll Student"
-                                >
-                                  <XCircle />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )
                 )}
-              </div>
-            )}
+              </aside>
+            </div>
+          )}
 
-            {activeTab === 'tas' && (
-              <div className="pa-section">
-                <h3><GraduationCap /> Teaching Assistants</h3>
-                {taList.length === 0 ? <div className="empty">No TAs created</div> : (
+          {activeTab === 'students' && (
+            <div className="pa-section">
+              <div className="pa-section-top">
+                <h3><Users /> Enrolled Students</h3>
+                <div>
+                  <button className="btn primary" onClick={() => setShowEnrollModal(true)} disabled={!selectedClass}><UserPlus /> Enroll Student</button>
+                </div>
+              </div>
+
+              {!selectedClass ? <div className="empty large">Select a class to view students</div> : (
+                enrolledStudents.length === 0 ? <div className="empty">No students enrolled</div> : (
                   <div className="table-wrap">
                     <table className="data-table">
-                      <thead><tr><th>Photo</th><th>TA ID</th><th>Name</th><th>Email</th><th>Department</th></tr></thead>
+                      <thead>
+                        <tr><th>Photo</th><th>Roll Number</th><th>Name</th><th>Email</th><th>Major</th><th>Actions</th></tr>
+                      </thead>
                       <tbody>
-                        {taList.map(ta => (
-                          <tr key={ta.id}>
+                        {enrolledStudents.map(s => (
+                          <tr key={s.id}>
                             <td>
-                              {ta.profilePictureBase64 ? (
-                                <img 
-                                  src={ta.profilePictureBase64} 
-                                  alt={ta.name} 
-                                  style={{ 
-                                    width: '40px', 
-                                    height: '40px', 
-                                    borderRadius: '50%', 
+                              {s.faceImageBase64 ? (
+                                <img
+                                  src={s.faceImageBase64}
+                                  alt={s.name}
+                                  style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    borderRadius: '50%',
                                     objectFit: 'cover',
                                     border: '2px solid rgba(102, 126, 234, 0.2)'
-                                  }} 
+                                  }}
                                 />
                               ) : (
-                                <div style={{ 
-                                  width: '40px', 
-                                  height: '40px', 
-                                  borderRadius: '50%', 
+                                <div style={{
+                                  width: '40px',
+                                  height: '40px',
+                                  borderRadius: '50%',
                                   background: 'rgba(102, 126, 234, 0.1)',
                                   display: 'flex',
                                   alignItems: 'center',
@@ -1215,24 +1152,87 @@ const ProfessorDashboard: React.FC = () => {
                                   fontSize: '16px',
                                   fontWeight: 'bold'
                                 }}>
-                                  {ta.name?.charAt(0)?.toUpperCase() || '?'}
+                                  {s.name?.charAt(0)?.toUpperCase() || '?'}
                                 </div>
                               )}
                             </td>
-                            <td>{ta.taId || 'N/A'}</td>
-                            <td>{ta.name || 'N/A'}</td>
-                            <td>{ta.email || 'N/A'}</td>
-                            <td>{ta.department || 'N/A'}</td>
+                            <td>{s.studentNumber || 'N/A'}</td>
+                            <td>{s.name || 'N/A'}</td>
+                            <td>{s.email || 'N/A'}</td>
+                            <td>{s.major || 'N/A'}</td>
+                            <td>
+                              <button
+                                className="btn icon danger small"
+                                onClick={() => unenrollStudent(s.id)}
+                                title="Unenroll Student"
+                              >
+                                <XCircle />
+                              </button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
+                )
+              )}
+            </div>
+          )}
+
+          {activeTab === 'tas' && (
+            <div className="pa-section">
+              <h3><GraduationCap /> Teaching Assistants</h3>
+              {taList.length === 0 ? <div className="empty">No TAs created</div> : (
+                <div className="table-wrap">
+                  <table className="data-table">
+                    <thead><tr><th>Photo</th><th>TA ID</th><th>Name</th><th>Email</th><th>Department</th></tr></thead>
+                    <tbody>
+                      {taList.map(ta => (
+                        <tr key={ta.id}>
+                          <td>
+                            {ta.profilePictureBase64 ? (
+                              <img
+                                src={ta.profilePictureBase64}
+                                alt={ta.name}
+                                style={{
+                                  width: '40px',
+                                  height: '40px',
+                                  borderRadius: '50%',
+                                  objectFit: 'cover',
+                                  border: '2px solid rgba(102, 126, 234, 0.2)'
+                                }}
+                              />
+                            ) : (
+                              <div style={{
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '50%',
+                                background: 'rgba(102, 126, 234, 0.1)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#667eea',
+                                fontSize: '16px',
+                                fontWeight: 'bold'
+                              }}>
+                                {ta.name?.charAt(0)?.toUpperCase() || '?'}
+                              </div>
+                            )}
+                          </td>
+                          <td>{ta.taId || 'N/A'}</td>
+                          <td>{ta.name || 'N/A'}</td>
+                          <td>{ta.email || 'N/A'}</td>
+                          <td>{ta.department || 'N/A'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
         </div>
+      </div>
 
 
       {showQRModal && selectedSession && (
@@ -1257,7 +1257,7 @@ const ProfessorDashboard: React.FC = () => {
 
       {showCreateClassModal && (
         <div className="modal-overlay" onClick={() => setShowCreateClassModal(false)}>
-          <div className="modal large" onClick={(e)=>e.stopPropagation()}>
+          <div className="modal large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4><BookOpen /> Create New Class</h4>
               <button className="icon-btn" onClick={() => setShowCreateClassModal(false)}><XCircle /></button>
@@ -1266,92 +1266,92 @@ const ProfessorDashboard: React.FC = () => {
               <div className="grid-2">
                 <label>
                   Class Code
-                  <input 
-                    value={classForm.code} 
-                    onChange={e=>setClassForm({...classForm, code: e.target.value})} 
-                    placeholder="e.g., CS101" 
+                  <input
+                    value={classForm.code}
+                    onChange={e => setClassForm({ ...classForm, code: e.target.value })}
+                    placeholder="e.g., CS101"
                   />
                 </label>
                 <label>
                   Credits
-                  <input 
-                    type="number" 
-                    value={classForm.credits} 
-                    onChange={e=>setClassForm({...classForm, credits: parseInt(e.target.value||'0')})} 
-                    placeholder="3" 
+                  <input
+                    type="number"
+                    value={classForm.credits}
+                    onChange={e => setClassForm({ ...classForm, credits: parseInt(e.target.value || '0') })}
+                    placeholder="3"
                   />
                 </label>
               </div>
               <label>
                 Course Title
-                <input 
-                  value={classForm.title} 
-                  onChange={e=>setClassForm({...classForm, title: e.target.value})} 
-                  placeholder="e.g., Introduction to Computer Science" 
+                <input
+                  value={classForm.title}
+                  onChange={e => setClassForm({ ...classForm, title: e.target.value })}
+                  placeholder="e.g., Introduction to Computer Science"
                 />
               </label>
               <label>
                 Course Description
-                <textarea 
-                  value={classForm.description} 
-                  onChange={e=>setClassForm({...classForm, description: e.target.value})} 
-                  placeholder="Brief overview of course topics, syllabus, and objectives..." 
+                <textarea
+                  value={classForm.description}
+                  onChange={e => setClassForm({ ...classForm, description: e.target.value })}
+                  placeholder="Brief overview of course topics, syllabus, and objectives..."
                 />
               </label>
               <div className="grid-2">
                 <label>
                   Semester
-                  <input 
-                    value={classForm.semester} 
-                    onChange={e=>setClassForm({...classForm, semester: e.target.value})} 
-                    placeholder="e.g., Fall 2024" 
+                  <input
+                    value={classForm.semester}
+                    onChange={e => setClassForm({ ...classForm, semester: e.target.value })}
+                    placeholder="e.g., Fall 2024"
                   />
                 </label>
                 <label>
                   Lecture Schedule
-                  <input 
-                    value={classForm.schedule} 
-                    onChange={e=>setClassForm({...classForm, schedule: e.target.value})} 
-                    placeholder="e.g., Mon/Wed 10:00 - 11:30 AM" 
+                  <input
+                    value={classForm.schedule}
+                    onChange={e => setClassForm({ ...classForm, schedule: e.target.value })}
+                    placeholder="e.g., Mon/Wed 10:00 - 11:30 AM"
                   />
                 </label>
               </div>
               <label>
                 Physical Classroom / Hall
-                <input 
-                  value={classForm.location} 
-                  onChange={e=>setClassForm({...classForm, location: e.target.value})} 
-                  placeholder="e.g., Room 301, Engineering Hall" 
+                <input
+                  value={classForm.location}
+                  onChange={e => setClassForm({ ...classForm, location: e.target.value })}
+                  placeholder="e.g., Room 301, Engineering Hall"
                 />
               </label>
               <div className="grid-2">
                 <label>
                   Classroom Latitude
-                  <input 
-                    type="number" 
-                    step="0.000001" 
-                    value={classForm.latitude} 
-                    onChange={e=>setClassForm({...classForm, latitude: parseFloat(e.target.value||'0')})} 
-                    placeholder="e.g., 25.4299" 
+                  <input
+                    type="number"
+                    step="0.000001"
+                    value={classForm.latitude}
+                    onChange={e => setClassForm({ ...classForm, latitude: parseFloat(e.target.value || '0') })}
+                    placeholder="e.g., 25.4299"
                   />
                 </label>
                 <label>
                   Classroom Longitude
-                  <input 
-                    type="number" 
-                    step="0.000001" 
-                    value={classForm.longitude} 
-                    onChange={e=>setClassForm({...classForm, longitude: parseFloat(e.target.value||'0')})} 
-                    placeholder="e.g., 81.7712" 
+                  <input
+                    type="number"
+                    step="0.000001"
+                    value={classForm.longitude}
+                    onChange={e => setClassForm({ ...classForm, longitude: parseFloat(e.target.value || '0') })}
+                    placeholder="e.g., 81.7712"
                   />
                 </label>
               </div>
               <label>
                 Classroom Wi-Fi Network Name (SSID)
-                <input 
-                  value={classForm.wifiSSID} 
-                  onChange={e=>setClassForm({...classForm, wifiSSID: e.target.value})} 
-                  placeholder="e.g., Campus-WiFi" 
+                <input
+                  value={classForm.wifiSSID}
+                  onChange={e => setClassForm({ ...classForm, wifiSSID: e.target.value })}
+                  placeholder="e.g., Campus-WiFi"
                 />
               </label>
             </div>
@@ -1365,10 +1365,10 @@ const ProfessorDashboard: React.FC = () => {
 
       {showEditClassModal && editingClass && (
         <div className="modal-overlay" onClick={() => { setShowEditClassModal(false); setEditingClass(null); }}>
-          <div className="modal large" onClick={(e)=>e.stopPropagation()}>
+          <div className="modal large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4><Edit /> Edit Class Details</h4>
-              <button className="icon-btn" onClick={()=>{ setShowEditClassModal(false); setEditingClass(null); }}><XCircle/></button>
+              <button className="icon-btn" onClick={() => { setShowEditClassModal(false); setEditingClass(null); }}><XCircle /></button>
             </div>
             <div className="modal-body">
               {editingClass && (
@@ -1381,90 +1381,90 @@ const ProfessorDashboard: React.FC = () => {
                   <div className="grid-2">
                     <label>
                       Class Code
-                      <input 
-                        value={editClassForm.code} 
-                        onChange={e=>setEditClassForm({...editClassForm, code: e.target.value})} 
-                        placeholder="e.g., CS101" 
+                      <input
+                        value={editClassForm.code}
+                        onChange={e => setEditClassForm({ ...editClassForm, code: e.target.value })}
+                        placeholder="e.g., CS101"
                       />
                     </label>
                     <label>
                       Credits
-                      <input 
-                        type="number" 
-                        value={editClassForm.credits} 
-                        onChange={e=>setEditClassForm({...editClassForm, credits: parseInt(e.target.value||'0')})} 
-                        placeholder="3" 
+                      <input
+                        type="number"
+                        value={editClassForm.credits}
+                        onChange={e => setEditClassForm({ ...editClassForm, credits: parseInt(e.target.value || '0') })}
+                        placeholder="3"
                       />
                     </label>
                   </div>
                   <label>
                     Course Title
-                    <input 
-                      value={editClassForm.title} 
-                      onChange={e=>setEditClassForm({...editClassForm, title: e.target.value})} 
-                      placeholder="e.g., Introduction to Computer Science" 
+                    <input
+                      value={editClassForm.title}
+                      onChange={e => setEditClassForm({ ...editClassForm, title: e.target.value })}
+                      placeholder="e.g., Introduction to Computer Science"
                     />
                   </label>
                   <label>
                     Course Description
-                    <textarea 
-                      value={editClassForm.description} 
-                      onChange={e=>setEditClassForm({...editClassForm, description: e.target.value})} 
-                      placeholder="Course overview and objectives..." 
+                    <textarea
+                      value={editClassForm.description}
+                      onChange={e => setEditClassForm({ ...editClassForm, description: e.target.value })}
+                      placeholder="Course overview and objectives..."
                     />
                   </label>
                   <div className="grid-2">
                     <label>
                       Semester
-                      <input 
-                        value={editClassForm.semester} 
-                        onChange={e=>setEditClassForm({...editClassForm, semester: e.target.value})} 
-                        placeholder="e.g., Fall 2024" 
+                      <input
+                        value={editClassForm.semester}
+                        onChange={e => setEditClassForm({ ...editClassForm, semester: e.target.value })}
+                        placeholder="e.g., Fall 2024"
                       />
                     </label>
                     <label>
                       Lecture Schedule
-                      <input 
-                        value={editClassForm.schedule} 
-                        onChange={e=>setEditClassForm({...editClassForm, schedule: e.target.value})} 
-                        placeholder="e.g., Mon/Wed 10:00 - 11:30 AM" 
+                      <input
+                        value={editClassForm.schedule}
+                        onChange={e => setEditClassForm({ ...editClassForm, schedule: e.target.value })}
+                        placeholder="e.g., Mon/Wed 10:00 - 11:30 AM"
                       />
                     </label>
                   </div>
                   <label>
                     Physical Classroom / Hall
-                    <input 
-                      value={editClassForm.location} 
-                      onChange={e=>setEditClassForm({...editClassForm, location: e.target.value})} 
-                      placeholder="e.g., Room 301, Engineering Hall" 
+                    <input
+                      value={editClassForm.location}
+                      onChange={e => setEditClassForm({ ...editClassForm, location: e.target.value })}
+                      placeholder="e.g., Room 301, Engineering Hall"
                     />
                   </label>
                   <div className="grid-2">
                     <label>
                       Classroom Latitude
-                      <input 
-                        type="number" 
-                        step="0.000001" 
-                        value={editClassForm.latitude} 
-                        onChange={e=>setEditClassForm({...editClassForm, latitude: parseFloat(e.target.value||'0')})} 
+                      <input
+                        type="number"
+                        step="0.000001"
+                        value={editClassForm.latitude}
+                        onChange={e => setEditClassForm({ ...editClassForm, latitude: parseFloat(e.target.value || '0') })}
                       />
                     </label>
                     <label>
                       Classroom Longitude
-                      <input 
-                        type="number" 
-                        step="0.000001" 
-                        value={editClassForm.longitude} 
-                        onChange={e=>setEditClassForm({...editClassForm, longitude: parseFloat(e.target.value||'0')})} 
+                      <input
+                        type="number"
+                        step="0.000001"
+                        value={editClassForm.longitude}
+                        onChange={e => setEditClassForm({ ...editClassForm, longitude: parseFloat(e.target.value || '0') })}
                       />
                     </label>
                   </div>
                   <label>
                     Classroom Wi-Fi Network Name (SSID)
-                    <input 
-                      value={editClassForm.wifiSSID} 
-                      onChange={e=>setEditClassForm({...editClassForm, wifiSSID: e.target.value})} 
-                      placeholder="e.g., Campus-WiFi" 
+                    <input
+                      value={editClassForm.wifiSSID}
+                      onChange={e => setEditClassForm({ ...editClassForm, wifiSSID: e.target.value })}
+                      placeholder="e.g., Campus-WiFi"
                     />
                   </label>
                 </>
@@ -1480,8 +1480,8 @@ const ProfessorDashboard: React.FC = () => {
               }}>
                 <Trash2 /> Delete Class
               </button>
-              <div style={{flex: 1}}></div>
-              <button className="btn ghost" onClick={()=>{ setShowEditClassModal(false); setEditingClass(null); }}>Cancel</button>
+              <div style={{ flex: 1 }}></div>
+              <button className="btn ghost" onClick={() => { setShowEditClassModal(false); setEditingClass(null); }}>Cancel</button>
               <button className="btn primary" onClick={updateClass}>Update Class</button>
             </div>
           </div>
@@ -1490,8 +1490,8 @@ const ProfessorDashboard: React.FC = () => {
 
       {showCreateSessionModal && selectedClass && (
         <div className="modal-overlay" onClick={() => setShowCreateSessionModal(false)}>
-          <div className="modal large" onClick={(e)=>e.stopPropagation()}>
-            <div className="modal-header"><h4><Calendar /> Create Session for {selectedClass.code}</h4><button className="icon-btn" onClick={()=>setShowCreateSessionModal(false)}><XCircle/></button></div>
+          <div className="modal large" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header"><h4><Calendar /> Create Session for {selectedClass.code}</h4><button className="icon-btn" onClick={() => setShowCreateSessionModal(false)}><XCircle /></button></div>
             <div className="modal-body">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 12 }}>
                 <span style={{ fontSize: '0.9rem', color: '#555' }}>
@@ -1509,22 +1509,22 @@ const ProfessorDashboard: React.FC = () => {
               <div className="grid-2">
                 <label>
                   Session Latitude
-                  <input 
-                    type="number" 
-                    step="0.000001" 
-                    value={sessionForm.latitude} 
-                    onChange={e=>setSessionForm({...sessionForm, latitude: parseFloat(e.target.value||'0')})} 
-                    placeholder="e.g., 25.4299" 
+                  <input
+                    type="number"
+                    step="0.000001"
+                    value={sessionForm.latitude}
+                    onChange={e => setSessionForm({ ...sessionForm, latitude: parseFloat(e.target.value || '0') })}
+                    placeholder="e.g., 25.4299"
                   />
                 </label>
                 <label>
                   Session Longitude
-                  <input 
-                    type="number" 
-                    step="0.000001" 
-                    value={sessionForm.longitude} 
-                    onChange={e=>setSessionForm({...sessionForm, longitude: parseFloat(e.target.value||'0')})} 
-                    placeholder="e.g., 81.7712" 
+                  <input
+                    type="number"
+                    step="0.000001"
+                    value={sessionForm.longitude}
+                    onChange={e => setSessionForm({ ...sessionForm, longitude: parseFloat(e.target.value || '0') })}
+                    placeholder="e.g., 81.7712"
                   />
                 </label>
               </div>
@@ -1543,10 +1543,10 @@ const ProfessorDashboard: React.FC = () => {
                     {detectingWifi ? 'Detecting…' : 'Use Current Wi-Fi'}
                   </button>
                 </div>
-                <input 
-                  value={sessionForm.wifiSSID} 
-                  onChange={e=>setSessionForm({...sessionForm, wifiSSID: e.target.value})} 
-                  placeholder="e.g., Redmi Note 13 5G or Campus-WiFi" 
+                <input
+                  value={sessionForm.wifiSSID}
+                  onChange={e => setSessionForm({ ...sessionForm, wifiSSID: e.target.value })}
+                  placeholder="e.g., Redmi Note 13 5G or Campus-WiFi"
                 />
                 <div className="form-hint">
                   Students will be required to be connected to this network to mark attendance.
@@ -1555,70 +1555,70 @@ const ProfessorDashboard: React.FC = () => {
               <div className="grid-2">
                 <label>
                   Network ID (CIDR Subnet)
-                  <input 
-                    value={sessionForm.networkId} 
-                    onChange={e=>setSessionForm({...sessionForm, networkId: e.target.value})} 
-                    placeholder="e.g., 10.50.100.0/24" 
+                  <input
+                    value={sessionForm.networkId}
+                    onChange={e => setSessionForm({ ...sessionForm, networkId: e.target.value })}
+                    placeholder="e.g., 10.50.100.0/24"
                   />
                 </label>
                 <label>
                   Subnet Mask
-                  <input 
-                    value={sessionForm.subnetMask} 
-                    onChange={e=>setSessionForm({...sessionForm, subnetMask: e.target.value})} 
-                    placeholder="255.255.255.0" 
+                  <input
+                    value={sessionForm.subnetMask}
+                    onChange={e => setSessionForm({ ...sessionForm, subnetMask: e.target.value })}
+                    placeholder="255.255.255.0"
                   />
                 </label>
               </div>
               <div className="grid-2">
                 <label>
                   Allowed Radius (meters)
-                  <input 
-                    type="number" 
-                    value={sessionForm.allowedRadiusMeters} 
-                    onChange={e=>setSessionForm({...sessionForm, allowedRadiusMeters: parseFloat(e.target.value||'0')})} 
-                    placeholder="50" 
+                  <input
+                    type="number"
+                    value={sessionForm.allowedRadiusMeters}
+                    onChange={e => setSessionForm({ ...sessionForm, allowedRadiusMeters: parseFloat(e.target.value || '0') })}
+                    placeholder="50"
                   />
                 </label>
                 <label>
                   Session Duration (minutes)
-                  <input 
-                    type="number" 
-                    value={sessionForm.durationMinutes} 
-                    onChange={e=>setSessionForm({...sessionForm, durationMinutes: parseInt(e.target.value||'0')})} 
-                    placeholder="30" 
+                  <input
+                    type="number"
+                    value={sessionForm.durationMinutes}
+                    onChange={e => setSessionForm({ ...sessionForm, durationMinutes: parseInt(e.target.value || '0') })}
+                    placeholder="30"
                   />
                 </label>
               </div>
               <div className="checkbox-grid">
                 <label className="checkbox-item">
-                  <input type="checkbox" checked={sessionForm.requireLocation} onChange={e=>setSessionForm({...sessionForm, requireLocation: e.target.checked})} />
+                  <input type="checkbox" checked={sessionForm.requireLocation} onChange={e => setSessionForm({ ...sessionForm, requireLocation: e.target.checked })} />
                   <span>Require Location Geofencing</span>
                 </label>
                 <label className="checkbox-item">
-                  <input type="checkbox" checked={sessionForm.requireWifi} onChange={e=>setSessionForm({...sessionForm, requireWifi: e.target.checked})} />
+                  <input type="checkbox" checked={sessionForm.requireWifi} onChange={e => setSessionForm({ ...sessionForm, requireWifi: e.target.checked })} />
                   <span>Require Wi-Fi SSID Verification</span>
                 </label>
                 <label className="checkbox-item">
-                  <input type="checkbox" checked={sessionForm.requireSubnetCheck} onChange={e=>setSessionForm({...sessionForm, requireSubnetCheck: e.target.checked})} />
+                  <input type="checkbox" checked={sessionForm.requireSubnetCheck} onChange={e => setSessionForm({ ...sessionForm, requireSubnetCheck: e.target.checked })} />
                   <span>Verify Subnet Mask & Network ID (Anti-Rogue AP)</span>
                 </label>
                 <label className="checkbox-item">
-                  <input type="checkbox" checked={sessionForm.requireOneDevicePerStudent} onChange={e=>setSessionForm({...sessionForm, requireOneDevicePerStudent: e.target.checked})} />
+                  <input type="checkbox" checked={sessionForm.requireOneDevicePerStudent} onChange={e => setSessionForm({ ...sessionForm, requireOneDevicePerStudent: e.target.checked })} />
                   <span>Enforce One Device, One Attendance (Anti-Proxy Device Lock)</span>
                 </label>
                 <label className="checkbox-item">
-                  <input type="checkbox" checked={sessionForm.requireProfessorVerification} onChange={e=>setSessionForm({...sessionForm, requireProfessorVerification: e.target.checked})} />
+                  <input type="checkbox" checked={sessionForm.requireProfessorVerification} onChange={e => setSessionForm({ ...sessionForm, requireProfessorVerification: e.target.checked })} />
                   <span>Require Professor Dual-Check</span>
                 </label>
                 <label className="checkbox-item">
-                  <input type="checkbox" checked={sessionForm.requireTAVerification} onChange={e=>setSessionForm({...sessionForm, requireTAVerification: e.target.checked})} />
+                  <input type="checkbox" checked={sessionForm.requireTAVerification} onChange={e => setSessionForm({ ...sessionForm, requireTAVerification: e.target.checked })} />
                   <span>Require TA Verification</span>
                 </label>
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn ghost" onClick={()=>setShowCreateSessionModal(false)}>Cancel</button>
+              <button className="btn ghost" onClick={() => setShowCreateSessionModal(false)}>Cancel</button>
               <button className="btn primary" onClick={createSession}>Create Session</button>
             </div>
           </div>
@@ -1627,10 +1627,10 @@ const ProfessorDashboard: React.FC = () => {
 
       {showEditSessionModal && editingSession && (
         <div className="modal-overlay" onClick={() => { setShowEditSessionModal(false); setEditingSession(null); }}>
-          <div className="modal large" onClick={(e)=>e.stopPropagation()}>
+          <div className="modal large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4><Edit /> Edit Session Settings</h4>
-              <button className="icon-btn" onClick={()=>{ setShowEditSessionModal(false); setEditingSession(null); }}><XCircle/></button>
+              <button className="icon-btn" onClick={() => { setShowEditSessionModal(false); setEditingSession(null); }}><XCircle /></button>
             </div>
             <div className="modal-body">
               {editingSession && (
@@ -1645,20 +1645,20 @@ const ProfessorDashboard: React.FC = () => {
                   <div className="grid-2">
                     <label>
                       Session Latitude
-                      <input 
-                        type="number" 
-                        step="0.000001" 
-                        value={editSessionForm.latitude} 
-                        onChange={e=>setEditSessionForm({...editSessionForm, latitude: parseFloat(e.target.value||'0')})} 
+                      <input
+                        type="number"
+                        step="0.000001"
+                        value={editSessionForm.latitude}
+                        onChange={e => setEditSessionForm({ ...editSessionForm, latitude: parseFloat(e.target.value || '0') })}
                       />
                     </label>
                     <label>
                       Session Longitude
-                      <input 
-                        type="number" 
-                        step="0.000001" 
-                        value={editSessionForm.longitude} 
-                        onChange={e=>setEditSessionForm({...editSessionForm, longitude: parseFloat(e.target.value||'0')})} 
+                      <input
+                        type="number"
+                        step="0.000001"
+                        value={editSessionForm.longitude}
+                        onChange={e => setEditSessionForm({ ...editSessionForm, longitude: parseFloat(e.target.value || '0') })}
                       />
                     </label>
                   </div>
@@ -1677,9 +1677,9 @@ const ProfessorDashboard: React.FC = () => {
                         {detectingWifi ? 'Detecting…' : 'Use Current Wi-Fi'}
                       </button>
                     </div>
-                    <input 
-                      value={editSessionForm.wifiSSID} 
-                      onChange={e=>setEditSessionForm({...editSessionForm, wifiSSID: e.target.value})} 
+                    <input
+                      value={editSessionForm.wifiSSID}
+                      onChange={e => setEditSessionForm({ ...editSessionForm, wifiSSID: e.target.value })}
                       placeholder="e.g., Redmi Note 13 5G or Campus-WiFi"
                     />
                     <div className="form-hint">
@@ -1689,62 +1689,62 @@ const ProfessorDashboard: React.FC = () => {
                   <div className="grid-2">
                     <label>
                       Network ID (CIDR Subnet)
-                      <input 
-                        value={editSessionForm.networkId} 
-                        onChange={e=>setEditSessionForm({...editSessionForm, networkId: e.target.value})} 
-                        placeholder="e.g., 10.50.100.0/24" 
+                      <input
+                        value={editSessionForm.networkId}
+                        onChange={e => setEditSessionForm({ ...editSessionForm, networkId: e.target.value })}
+                        placeholder="e.g., 10.50.100.0/24"
                       />
                     </label>
                     <label>
                       Subnet Mask
-                      <input 
-                        value={editSessionForm.subnetMask} 
-                        onChange={e=>setEditSessionForm({...editSessionForm, subnetMask: e.target.value})} 
-                        placeholder="255.255.255.0" 
+                      <input
+                        value={editSessionForm.subnetMask}
+                        onChange={e => setEditSessionForm({ ...editSessionForm, subnetMask: e.target.value })}
+                        placeholder="255.255.255.0"
                       />
                     </label>
                   </div>
                   <div className="grid-2">
                     <label>
                       Allowed Radius (meters)
-                      <input 
-                        type="number" 
-                        value={editSessionForm.allowedRadiusMeters} 
-                        onChange={e=>setEditSessionForm({...editSessionForm, allowedRadiusMeters: parseFloat(e.target.value||'0')})} 
+                      <input
+                        type="number"
+                        value={editSessionForm.allowedRadiusMeters}
+                        onChange={e => setEditSessionForm({ ...editSessionForm, allowedRadiusMeters: parseFloat(e.target.value || '0') })}
                       />
                     </label>
                     <label>
                       Session Duration (minutes)
-                      <input 
-                        type="number" 
-                        value={editSessionForm.durationMinutes} 
-                        onChange={e=>setEditSessionForm({...editSessionForm, durationMinutes: parseInt(e.target.value||'0')})} 
+                      <input
+                        type="number"
+                        value={editSessionForm.durationMinutes}
+                        onChange={e => setEditSessionForm({ ...editSessionForm, durationMinutes: parseInt(e.target.value || '0') })}
                       />
                     </label>
                   </div>
                   <div className="checkbox-grid">
                     <label className="checkbox-item">
-                      <input type="checkbox" checked={editSessionForm.requireLocation} onChange={e=>setEditSessionForm({...editSessionForm, requireLocation: e.target.checked})} />
+                      <input type="checkbox" checked={editSessionForm.requireLocation} onChange={e => setEditSessionForm({ ...editSessionForm, requireLocation: e.target.checked })} />
                       <span>Require Location Geofencing</span>
                     </label>
                     <label className="checkbox-item">
-                      <input type="checkbox" checked={editSessionForm.requireWifi} onChange={e=>setEditSessionForm({...editSessionForm, requireWifi: e.target.checked})} />
+                      <input type="checkbox" checked={editSessionForm.requireWifi} onChange={e => setEditSessionForm({ ...editSessionForm, requireWifi: e.target.checked })} />
                       <span>Require Wi-Fi SSID Verification</span>
                     </label>
                     <label className="checkbox-item">
-                      <input type="checkbox" checked={editSessionForm.requireSubnetCheck} onChange={e=>setEditSessionForm({...editSessionForm, requireSubnetCheck: e.target.checked})} />
+                      <input type="checkbox" checked={editSessionForm.requireSubnetCheck} onChange={e => setEditSessionForm({ ...editSessionForm, requireSubnetCheck: e.target.checked })} />
                       <span>Verify Subnet Mask & Network ID (Anti-Rogue AP)</span>
                     </label>
                     <label className="checkbox-item">
-                      <input type="checkbox" checked={editSessionForm.requireOneDevicePerStudent} onChange={e=>setEditSessionForm({...editSessionForm, requireOneDevicePerStudent: e.target.checked})} />
+                      <input type="checkbox" checked={editSessionForm.requireOneDevicePerStudent} onChange={e => setEditSessionForm({ ...editSessionForm, requireOneDevicePerStudent: e.target.checked })} />
                       <span>Enforce One Device, One Attendance (Anti-Proxy Device Lock)</span>
                     </label>
                     <label className="checkbox-item">
-                      <input type="checkbox" checked={editSessionForm.requireProfessorVerification} onChange={e=>setEditSessionForm({...editSessionForm, requireProfessorVerification: e.target.checked})} />
+                      <input type="checkbox" checked={editSessionForm.requireProfessorVerification} onChange={e => setEditSessionForm({ ...editSessionForm, requireProfessorVerification: e.target.checked })} />
                       <span>Require Professor Dual-Check</span>
                     </label>
                     <label className="checkbox-item">
-                      <input type="checkbox" checked={editSessionForm.requireTAVerification} onChange={e=>setEditSessionForm({...editSessionForm, requireTAVerification: e.target.checked})} />
+                      <input type="checkbox" checked={editSessionForm.requireTAVerification} onChange={e => setEditSessionForm({ ...editSessionForm, requireTAVerification: e.target.checked })} />
                       <span>Require TA Verification</span>
                     </label>
                   </div>
@@ -1761,8 +1761,8 @@ const ProfessorDashboard: React.FC = () => {
               }}>
                 <Trash2 /> Delete Session
               </button>
-              <div style={{flex: 1}}></div>
-              <button className="btn ghost" onClick={()=>{ setShowEditSessionModal(false); setEditingSession(null); }}>Cancel</button>
+              <div style={{ flex: 1 }}></div>
+              <button className="btn ghost" onClick={() => { setShowEditSessionModal(false); setEditingSession(null); }}>Cancel</button>
               <button className="btn primary" onClick={updateSession}>Update Session</button>
             </div>
           </div>
@@ -1770,21 +1770,21 @@ const ProfessorDashboard: React.FC = () => {
       )}
 
       {showEnrollModal && selectedClass && (
-        <div className="modal-overlay" onClick={()=>setShowEnrollModal(false)}>
-          <div className="modal" onClick={(e)=>e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setShowEnrollModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4><UserPlus /> Enroll Student to {selectedClass.code}</h4>
-              <button className="icon-btn" onClick={()=>setShowEnrollModal(false)}><XCircle/></button>
+              <button className="icon-btn" onClick={() => setShowEnrollModal(false)}><XCircle /></button>
             </div>
             <div className="modal-body">
               <div style={{ marginBottom: '18px', textAlign: 'center' }}>
                 <span style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>
                   Student Photo (Optional)
                 </span>
-                <div style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  alignItems: 'center', 
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
                   gap: '10px',
                   padding: '18px',
                   border: '2px dashed rgba(102, 126, 234, 0.35)',
@@ -1793,25 +1793,25 @@ const ProfessorDashboard: React.FC = () => {
                   cursor: 'pointer',
                   transition: 'all 0.2s'
                 }}
-                onClick={() => document.getElementById('photo-upload')?.click()}
-                onMouseEnter={(e) => { if (!enrollForm.photoPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.06)'; }}
-                onMouseLeave={(e) => { if (!enrollForm.photoPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.02)'; }}
+                  onClick={() => document.getElementById('photo-upload')?.click()}
+                  onMouseEnter={(e) => { if (!enrollForm.photoPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.06)'; }}
+                  onMouseLeave={(e) => { if (!enrollForm.photoPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.02)'; }}
                 >
                   {enrollForm.photoPreview ? (
                     <>
-                      <img 
-                        src={enrollForm.photoPreview} 
-                        alt="Preview" 
-                        style={{ 
-                          width: '110px', 
-                          height: '110px', 
-                          borderRadius: '50%', 
+                      <img
+                        src={enrollForm.photoPreview}
+                        alt="Preview"
+                        style={{
+                          width: '110px',
+                          height: '110px',
+                          borderRadius: '50%',
                           objectFit: 'cover',
                           border: '3px solid rgba(102, 126, 234, 0.3)',
                           boxShadow: '0 4px 14px rgba(102, 126, 234, 0.2)'
-                        }} 
+                        }}
                       />
-                      <button 
+                      <button
                         type="button"
                         className="btn subtle small"
                         onClick={(e) => {
@@ -1846,48 +1846,48 @@ const ProfessorDashboard: React.FC = () => {
 
               <label>
                 Full Name
-                <input 
-                  value={enrollForm.name} 
-                  onChange={e=>setEnrollForm({...enrollForm, name: e.target.value})} 
-                  placeholder="e.g., Alex Smith" 
+                <input
+                  value={enrollForm.name}
+                  onChange={e => setEnrollForm({ ...enrollForm, name: e.target.value })}
+                  placeholder="e.g., Alex Smith"
                 />
               </label>
 
               <label>
                 Roll Number / Student ID
-                <input 
-                  value={enrollForm.rollNumber} 
-                  onChange={e=>setEnrollForm({...enrollForm, rollNumber: e.target.value})} 
-                  placeholder="e.g., S101 or 2024CS001" 
+                <input
+                  value={enrollForm.rollNumber}
+                  onChange={e => setEnrollForm({ ...enrollForm, rollNumber: e.target.value })}
+                  placeholder="e.g., S101 or 2024CS001"
                 />
               </label>
 
               <label>
                 Email Address
-                <input 
-                  type="email" 
-                  value={enrollForm.email} 
-                  onChange={e=>setEnrollForm({...enrollForm, email: e.target.value})} 
-                  placeholder="e.g., alex.smith@campus.edu" 
+                <input
+                  type="email"
+                  value={enrollForm.email}
+                  onChange={e => setEnrollForm({ ...enrollForm, email: e.target.value })}
+                  placeholder="e.g., alex.smith@campus.edu"
                 />
               </label>
 
               <label>
                 Password
-                <input 
-                  type="password" 
-                  value={enrollForm.password} 
-                  onChange={e=>setEnrollForm({...enrollForm, password: e.target.value})} 
-                  placeholder="Create a student password" 
+                <input
+                  type="password"
+                  value={enrollForm.password}
+                  onChange={e => setEnrollForm({ ...enrollForm, password: e.target.value })}
+                  placeholder="Create a student password"
                 />
               </label>
 
               <div className="grid-2">
                 <label>
                   Major / Department
-                  <select 
-                    value={enrollForm.major} 
-                    onChange={e=>setEnrollForm({...enrollForm, major: e.target.value})}
+                  <select
+                    value={enrollForm.major}
+                    onChange={e => setEnrollForm({ ...enrollForm, major: e.target.value })}
                   >
                     <option value="">Select Department / Major</option>
                     {DEPARTMENTS.map(dept => (
@@ -1897,21 +1897,21 @@ const ProfessorDashboard: React.FC = () => {
                 </label>
                 <label>
                   Academic Year
-                  <input 
-                    type="number" 
-                    min="1" 
-                    max="6" 
-                    value={enrollForm.year} 
-                    onChange={e=>setEnrollForm({...enrollForm, year: parseInt(e.target.value||'1')})} 
-                    placeholder="1" 
+                  <input
+                    type="number"
+                    min="1"
+                    max="6"
+                    value={enrollForm.year}
+                    onChange={e => setEnrollForm({ ...enrollForm, year: parseInt(e.target.value || '1') })}
+                    placeholder="1"
                   />
                 </label>
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn ghost" onClick={()=>{
+              <button className="btn ghost" onClick={() => {
                 setShowEnrollModal(false);
-                setEnrollForm({ name:'', rollNumber:'', password:'', email:'', major:'', year:1, photo: null, photoPreview: null });
+                setEnrollForm({ name: '', rollNumber: '', password: '', email: '', major: '', year: 1, photo: null, photoPreview: null });
               }}>Cancel</button>
               <button className="btn primary" onClick={enrollStudent}>Enroll Student</button>
             </div>
@@ -1920,27 +1920,27 @@ const ProfessorDashboard: React.FC = () => {
       )}
 
       {showCreateTAModal && (
-        <div className="modal-overlay" onClick={()=>{
+        <div className="modal-overlay" onClick={() => {
           setShowCreateTAModal(false);
           setTaForm({ name: '', taId: '', password: '', email: '', department: '', photo: null, photoPreview: null });
         }}>
-          <div className="modal" onClick={(e)=>e.stopPropagation()}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4><GraduationCap /> Add Teaching Assistant</h4>
-              <button className="icon-btn" onClick={()=>{
+              <button className="icon-btn" onClick={() => {
                 setShowCreateTAModal(false);
                 setTaForm({ name: '', taId: '', password: '', email: '', department: '', photo: null, photoPreview: null });
-              }}><XCircle/></button>
+              }}><XCircle /></button>
             </div>
             <div className="modal-body">
               <div style={{ marginBottom: '18px', textAlign: 'center' }}>
                 <span style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>
                   Profile Picture (Optional)
                 </span>
-                <div style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  alignItems: 'center', 
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
                   gap: '10px',
                   padding: '18px',
                   border: '2px dashed rgba(102, 126, 234, 0.35)',
@@ -1949,30 +1949,30 @@ const ProfessorDashboard: React.FC = () => {
                   cursor: 'pointer',
                   transition: 'all 0.2s'
                 }}
-                onClick={() => document.getElementById('ta-photo-upload')?.click()}
-                onMouseEnter={(e) => { if (!taForm.photoPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.06)'; }}
-                onMouseLeave={(e) => { if (!taForm.photoPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.02)'; }}
+                  onClick={() => document.getElementById('ta-photo-upload')?.click()}
+                  onMouseEnter={(e) => { if (!taForm.photoPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.06)'; }}
+                  onMouseLeave={(e) => { if (!taForm.photoPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.02)'; }}
                 >
                   {taForm.photoPreview ? (
                     <>
-                      <img 
-                        src={taForm.photoPreview} 
-                        alt="Preview" 
-                        style={{ 
-                          width: '100px', 
-                          height: '100px', 
-                          borderRadius: '50%', 
+                      <img
+                        src={taForm.photoPreview}
+                        alt="Preview"
+                        style={{
+                          width: '100px',
+                          height: '100px',
+                          borderRadius: '50%',
                           objectFit: 'cover',
                           border: '3px solid rgba(102, 126, 234, 0.3)',
                           boxShadow: '0 4px 14px rgba(102, 126, 234, 0.2)'
-                        }} 
+                        }}
                       />
-                      <button 
+                      <button
                         type="button"
                         className="btn subtle small"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setTaForm({...taForm, photo: null, photoPreview: null});
+                          setTaForm({ ...taForm, photo: null, photoPreview: null });
                         }}
                         style={{ marginTop: '6px' }}
                       >
@@ -2016,47 +2016,47 @@ const ProfessorDashboard: React.FC = () => {
 
               <label>
                 Full Name
-                <input 
-                  value={taForm.name} 
-                  onChange={e=>setTaForm({...taForm, name: e.target.value})} 
-                  placeholder="e.g., Sarah Connor" 
+                <input
+                  value={taForm.name}
+                  onChange={e => setTaForm({ ...taForm, name: e.target.value })}
+                  placeholder="e.g., Sarah Connor"
                 />
               </label>
 
               <label>
                 TA Identification ID
-                <input 
-                  value={taForm.taId} 
-                  onChange={e=>setTaForm({...taForm, taId: e.target.value})} 
-                  placeholder="e.g., TA001 or TA_CS_01" 
+                <input
+                  value={taForm.taId}
+                  onChange={e => setTaForm({ ...taForm, taId: e.target.value })}
+                  placeholder="e.g., TA001 or TA_CS_01"
                 />
               </label>
 
               <label>
                 Email Address
-                <input 
-                  type="email" 
-                  value={taForm.email} 
-                  onChange={e=>setTaForm({...taForm, email: e.target.value})} 
-                  placeholder="e.g., sarah.connor@campus.edu" 
+                <input
+                  type="email"
+                  value={taForm.email}
+                  onChange={e => setTaForm({ ...taForm, email: e.target.value })}
+                  placeholder="e.g., sarah.connor@campus.edu"
                 />
               </label>
 
               <label>
                 Password
-                <input 
-                  type="password" 
-                  value={taForm.password} 
-                  onChange={e=>setTaForm({...taForm, password: e.target.value})} 
-                  placeholder="Create a password for this TA" 
+                <input
+                  type="password"
+                  value={taForm.password}
+                  onChange={e => setTaForm({ ...taForm, password: e.target.value })}
+                  placeholder="Create a password for this TA"
                 />
               </label>
 
               <label>
                 Department / Faculty
-                <select 
-                  value={taForm.department} 
-                  onChange={e=>setTaForm({...taForm, department: e.target.value})}
+                <select
+                  value={taForm.department}
+                  onChange={e => setTaForm({ ...taForm, department: e.target.value })}
                 >
                   <option value="">Select Department</option>
                   {DEPARTMENTS.map(dept => (
@@ -2066,7 +2066,7 @@ const ProfessorDashboard: React.FC = () => {
               </label>
             </div>
             <div className="modal-footer">
-              <button className="btn ghost" onClick={()=>{
+              <button className="btn ghost" onClick={() => {
                 setShowCreateTAModal(false);
                 setTaForm({ name: '', taId: '', password: '', email: '', department: '', photo: null, photoPreview: null });
               }}>Cancel</button>
@@ -2077,16 +2077,16 @@ const ProfessorDashboard: React.FC = () => {
       )}
 
       {showAssignTAModal && selectedClass && (
-        <div className="modal-overlay" onClick={()=>setShowAssignTAModal(false)}>
-          <div className="modal" onClick={(e)=>e.stopPropagation()}>
-            <div className="modal-header"><h4><Settings /> Assign TAs to {selectedClass.code}</h4><button className="icon-btn" onClick={()=>setShowAssignTAModal(false)}><XCircle/></button></div>
+        <div className="modal-overlay" onClick={() => setShowAssignTAModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header"><h4><Settings /> Assign TAs to {selectedClass.code}</h4><button className="icon-btn" onClick={() => setShowAssignTAModal(false)}><XCircle /></button></div>
             <div className="modal-body">
               <div className="ta-assign-list">
                 {taList.map(ta => (
                   <label key={ta.id} className="ta-assign-item">
                     <input type="checkbox" checked={assignTAForm.selectedTAs.includes(ta.id)} onChange={(e) => {
                       if (e.target.checked) setAssignTAForm({ selectedTAs: [...assignTAForm.selectedTAs, ta.id] });
-                      else setAssignTAForm({ selectedTAs: assignTAForm.selectedTAs.filter(id=>id!==ta.id) });
+                      else setAssignTAForm({ selectedTAs: assignTAForm.selectedTAs.filter(id => id !== ta.id) });
                     }} />
                     <div>
                       <div className="ta-name">{ta.name}</div>
@@ -2097,7 +2097,7 @@ const ProfessorDashboard: React.FC = () => {
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn ghost" onClick={()=>setShowAssignTAModal(false)}>Cancel</button>
+              <button className="btn ghost" onClick={() => setShowAssignTAModal(false)}>Cancel</button>
               <button className="btn primary" onClick={assignTAsToClass}>Assign TAs</button>
             </div>
           </div>
@@ -2106,10 +2106,10 @@ const ProfessorDashboard: React.FC = () => {
 
       {showTADetailsModal && viewingClassTAs && (
         <div className="modal-overlay" onClick={() => { setShowTADetailsModal(false); setViewingClassTAs(null); }}>
-          <div className="modal" onClick={(e)=>e.stopPropagation()}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4><GraduationCap /> TA Details - {viewingClassTAs.code}</h4>
-              <button className="icon-btn" onClick={() => { setShowTADetailsModal(false); setViewingClassTAs(null); }}><XCircle/></button>
+              <button className="icon-btn" onClick={() => { setShowTADetailsModal(false); setViewingClassTAs(null); }}><XCircle /></button>
             </div>
             <div className="modal-body">
               {getClassTAs(viewingClassTAs).length === 0 ? (
@@ -2125,22 +2125,22 @@ const ProfessorDashboard: React.FC = () => {
                         <tr key={ta.id}>
                           <td>
                             {ta.profilePictureBase64 ? (
-                              <img 
-                                src={ta.profilePictureBase64} 
-                                alt={ta.name} 
-                                style={{ 
-                                  width: '40px', 
-                                  height: '40px', 
-                                  borderRadius: '50%', 
+                              <img
+                                src={ta.profilePictureBase64}
+                                alt={ta.name}
+                                style={{
+                                  width: '40px',
+                                  height: '40px',
+                                  borderRadius: '50%',
                                   objectFit: 'cover',
                                   border: '2px solid rgba(102, 126, 234, 0.2)'
-                                }} 
+                                }}
                               />
                             ) : (
-                              <div style={{ 
-                                width: '40px', 
-                                height: '40px', 
-                                borderRadius: '50%', 
+                              <div style={{
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '50%',
                                 background: 'rgba(102, 126, 234, 0.1)',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -2158,8 +2158,8 @@ const ProfessorDashboard: React.FC = () => {
                           <td>{ta.email || 'N/A'}</td>
                           <td>{ta.department || 'N/A'}</td>
                           <td>
-                            <button 
-                              className="btn icon danger small" 
+                            <button
+                              className="btn icon danger small"
                               onClick={() => {
                                 if (viewingClassTAs) {
                                   unenrollTA(ta.id);
@@ -2186,7 +2186,7 @@ const ProfessorDashboard: React.FC = () => {
                 setViewingClassTAs(null);
                 if (viewingClassTAs) {
                   setSelectedClass(viewingClassTAs);
-                  setAssignTAForm({selectedTAs: viewingClassTAs.taIds || []});
+                  setAssignTAForm({ selectedTAs: viewingClassTAs.taIds || [] });
                   setShowAssignTAModal(true);
                 }
               }}>
@@ -2199,16 +2199,16 @@ const ProfessorDashboard: React.FC = () => {
 
       {showProfileModal && (
         <div className="modal-overlay" onClick={() => { setShowProfileModal(false); setProfilePicture(null); setProfileModalPreview(null); }}>
-          <div className="modal" onClick={(e)=>e.stopPropagation()}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4><User /> Update Profile Picture</h4>
-              <button className="icon-btn" onClick={() => { setShowProfileModal(false); setProfilePicture(null); setProfileModalPreview(null); }}><XCircle/></button>
+              <button className="icon-btn" onClick={() => { setShowProfileModal(false); setProfilePicture(null); setProfileModalPreview(null); }}><XCircle /></button>
             </div>
             <div className="modal-body" style={{ textAlign: 'center' }}>
-              <div style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
                 gap: '16px',
                 padding: '20px',
                 border: '2px dashed rgba(102, 126, 234, 0.3)',
@@ -2217,25 +2217,25 @@ const ProfessorDashboard: React.FC = () => {
                 cursor: 'pointer',
                 transition: 'all 0.2s'
               }}
-              onClick={() => document.getElementById('profile-upload')?.click()}
-              onMouseEnter={(e) => { if (!profileModalPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.05)'; }}
-              onMouseLeave={(e) => { if (!profileModalPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.02)'; }}
+                onClick={() => document.getElementById('profile-upload')?.click()}
+                onMouseEnter={(e) => { if (!profileModalPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.05)'; }}
+                onMouseLeave={(e) => { if (!profileModalPreview) e.currentTarget.style.background = 'rgba(102, 126, 234, 0.02)'; }}
               >
                 {profileModalPreview ? (
                   <>
-                    <img 
-                      src={profileModalPreview} 
-                      alt="Preview" 
-                      style={{ 
-                        width: '150px', 
-                        height: '150px', 
-                        borderRadius: '50%', 
+                    <img
+                      src={profileModalPreview}
+                      alt="Preview"
+                      style={{
+                        width: '150px',
+                        height: '150px',
+                        borderRadius: '50%',
                         objectFit: 'cover',
                         border: '3px solid rgba(102, 126, 234, 0.2)',
                         boxShadow: '0 4px 12px rgba(102, 126, 234, 0.15)'
-                      }} 
+                      }}
                     />
-                    <button 
+                    <button
                       type="button"
                       className="btn subtle small"
                       onClick={(e) => {
