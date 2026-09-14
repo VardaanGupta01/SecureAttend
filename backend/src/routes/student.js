@@ -93,7 +93,7 @@ router.get(
 
     // Compute student's Network ID using client IP (or active interface IP if loopback)
     const effectiveIp = (clientIp === '127.0.0.1' || clientIp === '::1') && activeInterface ? activeInterface.ip : clientIp;
-    const effectiveSubnetMask = activeInterface ? activeInterface.netmask : requiredSubnetMask;
+    const effectiveSubnetMask = requiredSubnetMask || (activeInterface ? activeInterface.netmask : '255.255.255.0');
     const clientNetInfo = calculateNetworkId(effectiveIp, effectiveSubnetMask);
 
     const detectedSSID = systemSsid || '';

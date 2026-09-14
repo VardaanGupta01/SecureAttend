@@ -154,12 +154,15 @@ const ProfessorDashboard: React.FC = () => {
           requireWifi: true,
           requireSubnetCheck: true,
         }));
-        setFlashMessage({
+        setMessage({
           type: 'success',
           text: `Auto-filled Wi-Fi: ${data.detectedSSID} (Subnet: ${data.networkId || 'N/A'})`,
         });
       } else {
-        setFlashMessage({ type: 'info', text: 'No active Wi-Fi detected on this host.' });
+        setMessage({
+          type: 'error',
+          text: 'Cloud server active (Render cloud has no local Wi-Fi interface). Please enter your classroom Wi-Fi SSID manually below.',
+        });
       }
     } catch (err) {
       console.warn('Could not auto-detect Wi-Fi:', err);
@@ -182,12 +185,15 @@ const ProfessorDashboard: React.FC = () => {
           requireWifi: true,
           requireSubnetCheck: true,
         }));
-        setFlashMessage({
+        setMessage({
           type: 'success',
           text: `Auto-filled Wi-Fi: ${data.detectedSSID} (Subnet: ${data.networkId || 'N/A'})`,
         });
       } else {
-        setFlashMessage({ type: 'info', text: 'No active Wi-Fi detected on this host.' });
+        setMessage({
+          type: 'error',
+          text: 'Cloud server active (Render cloud has no local Wi-Fi interface). Please enter your classroom Wi-Fi SSID manually below.',
+        });
       }
     } catch (err) {
       console.warn('Could not auto-detect Wi-Fi:', err);
@@ -1548,7 +1554,21 @@ const ProfessorDashboard: React.FC = () => {
                   onChange={e => setSessionForm({ ...sessionForm, wifiSSID: e.target.value })}
                   placeholder="e.g., Redmi Note 13 5G or Campus-WiFi"
                 />
-                <div className="form-hint">
+                <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Presets:</span>
+                  {['Campus-WiFi', 'eduroam', 'Student-WLAN', 'IIIT-WiFi'].map(ssid => (
+                    <button
+                      key={ssid}
+                      type="button"
+                      className="btn subtle"
+                      style={{ padding: '2px 8px', fontSize: '0.75rem', height: 'auto' }}
+                      onClick={() => setSessionForm({ ...sessionForm, wifiSSID: ssid })}
+                    >
+                      {ssid}
+                    </button>
+                  ))}
+                </div>
+                <div className="form-hint" style={{ marginTop: 4 }}>
                   Students will be required to be connected to this network to mark attendance.
                 </div>
               </div>
@@ -1682,7 +1702,21 @@ const ProfessorDashboard: React.FC = () => {
                       onChange={e => setEditSessionForm({ ...editSessionForm, wifiSSID: e.target.value })}
                       placeholder="e.g., Redmi Note 13 5G or Campus-WiFi"
                     />
-                    <div className="form-hint">
+                    <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Presets:</span>
+                      {['Campus-WiFi', 'eduroam', 'Student-WLAN', 'IIIT-WiFi'].map(ssid => (
+                        <button
+                          key={ssid}
+                          type="button"
+                          className="btn subtle"
+                          style={{ padding: '2px 8px', fontSize: '0.75rem', height: 'auto' }}
+                          onClick={() => setEditSessionForm({ ...editSessionForm, wifiSSID: ssid })}
+                        >
+                          {ssid}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="form-hint" style={{ marginTop: 4 }}>
                       Students will be required to be connected to this network to mark attendance.
                     </div>
                   </div>

@@ -284,7 +284,12 @@ const StudentPortal: React.FC = () => {
             </button>
           </div>
         );
-      case 1:
+      case 1: {
+        const isAutoDetected = Boolean(detectedWifiInfo?.isAutoDetected);
+        const isSsidMatch = detectedWifiInfo?.requiredSSID
+          ? wifiSsid.trim().toLowerCase() === detectedWifiInfo.requiredSSID.trim().toLowerCase()
+          : true;
+
         return (
           <div>
             <p className="form-hint" style={{ marginBottom: 12 }}>Confirm you are in the classroom.</p>
@@ -294,7 +299,9 @@ const StudentPortal: React.FC = () => {
             </div>
             <div className="form-field">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <label style={{ margin: 0, fontWeight: 600 }}>Wi-Fi Network (Auto-Detected)</label>
+                <label style={{ margin: 0, fontWeight: 600 }}>
+                  {isAutoDetected ? 'Wi-Fi Network (Auto-Detected)' : 'Classroom Wi-Fi Network'}
+                </label>
                 <button
                   type="button"
                   className="btn ghost"
@@ -311,11 +318,18 @@ const StudentPortal: React.FC = () => {
                 <input
                   className="form-input"
                   value={wifiSsid}
-                  readOnly
-                  placeholder={isDetectingWifi ? "Detecting connected Wi-Fi…" : "No Wi-Fi network detected"}
+                  onChange={(e) => setWifiSsid(e.target.value)}
+                  readOnly={isAutoDetected}
+                  placeholder={
+                    isDetectingWifi
+                      ? "Detecting connected Wi-Fi…"
+                      : isAutoDetected
+                      ? "No Wi-Fi network detected"
+                      : "Enter classroom Wi-Fi SSID (e.g. Campus-WiFi)"
+                  }
                   style={{
-                    backgroundColor: 'rgba(243, 244, 246, 0.7)',
-                    cursor: 'not-allowed',
+                    backgroundColor: isAutoDetected ? 'rgba(243, 244, 246, 0.7)' : '#ffffff',
+                    cursor: isAutoDetected ? 'not-allowed' : 'text',
                     fontWeight: 600,
                     color: wifiSsid ? 'inherit' : '#9ca3af',
                   }}
@@ -329,24 +343,26 @@ const StudentPortal: React.FC = () => {
               {detectedWifiInfo && (
                 <div style={{ marginTop: 6, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: 6 }}>
                   {detectedWifiInfo.wifiRequired ? (
-                    detectedWifiInfo.isMatch ? (
+                    isSsidMatch ? (
                       <span style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 4 }}>
                         <CheckCircle size={14} /> Network matched: {detectedWifiInfo.requiredSSID}
                       </span>
                     ) : (
                       <span style={{ color: '#dc2626', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <X size={14} /> Connected to &apos;{detectedWifiInfo.detectedSSID}&apos; (Expected: &apos;{detectedWifiInfo.requiredSSID}&apos;)
+                        <X size={14} /> {wifiSsid ? `Entered '${wifiSsid}'` : 'Wi-Fi required'} (Expected: &apos;{detectedWifiInfo.requiredSSID}&apos;)
                       </span>
                     )
                   ) : (
                     <span style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <CheckCircle size={14} /> Connected: {detectedWifiInfo.detectedSSID} (Auto-detected)
+                      <CheckCircle size={14} /> {wifiSsid ? `Network: ${wifiSsid}` : 'Wi-Fi optional for this session'}
                     </span>
                   )}
                 </div>
               )}
               <div className="form-hint" style={{ marginTop: 4 }}>
-                SSID is automatically verified from your device interface to prevent bypass spoofing.
+                {isAutoDetected
+                  ? 'SSID is automatically verified from your device interface to prevent bypass spoofing.'
+                  : 'Cloud deployment mode: Enter your connected classroom Wi-Fi name.'}
               </div>
             </div>
             <div className="form-field" style={{ marginTop: 12 }}>
@@ -383,12 +399,13 @@ const StudentPortal: React.FC = () => {
               type="button"
               className="btn primary full"
               onClick={proceedToNextStep}
-              disabled={loading || (detectedWifiInfo?.wifiRequired && !wifiSsid.trim()) || (detectedWifiInfo?.subnetRequired && !detectedWifiInfo.isSubnetMatch)}
+              disabled={loading || (detectedWifiInfo?.wifiRequired && !isSsidMatch) || (detectedWifiInfo?.subnetRequired && !detectedWifiInfo.isSubnetMatch)}
             >
               <CheckCircle size={16} /> {loading ? 'Verifying…' : 'Verify & Mark Attendance'}
             </button>
           </div>
         );
+      }
       default:
         return null;
     }
@@ -431,7 +448,9 @@ const StudentPortal: React.FC = () => {
             </div>
             <div className="form-field">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <label style={{ margin: 0 }}>Connected Wi-Fi Network</label>
+                <label style={{ margin: 0 }}>
+                  {detectedWifiInfo?.isAutoDetected ? 'Connected Wi-Fi Network' : 'Classroom Wi-Fi Network'}
+                </label>
                 <button
                   type="button"
                   className="btn ghost"
@@ -447,16 +466,27 @@ const StudentPortal: React.FC = () => {
               <input
                 className="form-input"
                 value={wifiSsid}
-                readOnly
-                placeholder={isDetectingWifi ? "Detecting Wi-Fi…" : "No Wi-Fi detected"}
+                onChange={(e) => setWifiSsid(e.target.value)}
+                readOnly={Boolean(detectedWifiInfo?.isAutoDetected)}
+                placeholder={
+                  isDetectingWifi
+                    ? 'Detecting Wi-Fi…'
+                    : detectedWifiInfo?.isAutoDetected
+                    ? 'No Wi-Fi detected'
+                    : 'Enter classroom Wi-Fi SSID (e.g. Campus-WiFi)'
+                }
                 style={{
-                  backgroundColor: 'rgba(243, 244, 246, 0.7)',
-                  cursor: 'not-allowed',
+                  backgroundColor: detectedWifiInfo?.isAutoDetected ? 'rgba(243, 244, 246, 0.7)' : '#ffffff',
+                  cursor: detectedWifiInfo?.isAutoDetected ? 'not-allowed' : 'text',
                   fontWeight: 600,
                   color: wifiSsid ? 'inherit' : '#9ca3af',
                 }}
               />
-              <div className="form-hint">Automatically fetched from your connection (read-only for security)</div>
+              <div className="form-hint">
+                {detectedWifiInfo?.isAutoDetected
+                  ? 'Automatically fetched from your connection (read-only for security)'
+                  : 'Cloud deployment mode: Enter your connected classroom Wi-Fi name'}
+              </div>
             </div>
             <button type="button" className="btn primary full" style={{ marginBottom: 10 }} onClick={startVerification} disabled={!sessionId || !qrOrCodeword}>
               Start Verification Process

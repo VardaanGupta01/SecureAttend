@@ -12,6 +12,9 @@ import { error } from './utils/apiResponse.js';
 
 const app = express();
 
+// Trust reverse proxy headers (Render, Cloudflare, etc.) to get real client IP
+app.set('trust proxy', 1);
+
 // Allow browser requests from Vercel/local dev (reflect request origin)
 app.use(
   cors({
