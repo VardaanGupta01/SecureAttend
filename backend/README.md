@@ -29,6 +29,7 @@ GET /api/health
 
 ## Deployment
 
-Dockerfile included. Update `render.yaml` points to this directory.
-
+Deploy as a standard Node.js web service (e.g. Render, Railway, Vercel).
 Set `MONGODB_URI` in your hosting environment variables.
+Build command: `npm install`
+Start command: `node src/server.js`
