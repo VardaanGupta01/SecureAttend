@@ -13,4 +13,19 @@ export const api = axios.create({
   timeout: 90000, // Render free tier can take ~60s to wake up
 });
 
+api.interceptors.request.use((config) => {
+  try {
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      const user = JSON.parse(stored);
+      if (user?.token) {
+        config.headers.Authorization = `Bearer ${user.token}`;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return config;
+});
+
 export default api;

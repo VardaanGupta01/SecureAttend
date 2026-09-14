@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import {
   Users, Plus, QrCode, Clock, MapPin, CheckCircle, XCircle,
   UserPlus, Trash2, BookOpen, GraduationCap,
-  AlertCircle, Eye, Settings, Calendar, TrendingUp, Edit, Camera, User
+  AlertCircle, Eye, Settings, Calendar, TrendingUp, Edit, Camera, User, Wifi
 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import DashboardLayout from './layout/DashboardLayout';
 import api from '../config/api';
 import { profileAPI } from '../services/api';
+import { DEPARTMENTS } from '../constants/departments';
 
 const apiClient = api;
 
@@ -42,7 +43,7 @@ interface SessionItem {
   professorHeadcount?: number;
   requireProfessorVerification?: boolean;
   requireLocation?: boolean;
-  requireFace?: boolean;
+  requireWifi?: boolean;
   requireTAVerification?: boolean;
   latitude?: number;
   longitude?: number;
@@ -125,10 +126,48 @@ const ProfessorDashboard: React.FC = () => {
   });
 
   const [sessionForm, setSessionForm] = useState<any>({
-    latitude: 0, longitude: 0, wifiSSID: "Campus-WiFi",
+    latitude: 0, longitude: 0, wifiSSID: "",
     allowedRadiusMeters: 50, durationMinutes: 120, requireLocation: true,
-    requireFace: true, requireProfessorVerification: true, requireTAVerification: false
+    requireWifi: true, requireProfessorVerification: true, requireTAVerification: false
   });
+
+  const [detectingWifi, setDetectingWifi] = useState(false);
+
+  const fetchCurrentWifiForSession = async () => {
+    setDetectingWifi(true);
+    try {
+      const res = await api.get('/student/detect-network');
+      const data = res.data?.data || res.data;
+      if (data?.detectedSSID) {
+        setSessionForm((prev: any) => ({ ...prev, wifiSSID: data.detectedSSID, requireWifi: true }));
+        setFlashMessage({ type: 'success', text: `Auto-filled Wi-Fi network: ${data.detectedSSID}` });
+      } else {
+        setFlashMessage({ type: 'info', text: 'No active Wi-Fi detected on this host.' });
+      }
+    } catch (err) {
+      console.warn('Could not auto-detect Wi-Fi:', err);
+    } finally {
+      setDetectingWifi(false);
+    }
+  };
+
+  const fetchCurrentWifiForEditSession = async () => {
+    setDetectingWifi(true);
+    try {
+      const res = await api.get('/student/detect-network');
+      const data = res.data?.data || res.data;
+      if (data?.detectedSSID) {
+        setEditSessionForm((prev: any) => ({ ...prev, wifiSSID: data.detectedSSID, requireWifi: true }));
+        setFlashMessage({ type: 'success', text: `Auto-filled Wi-Fi network: ${data.detectedSSID}` });
+      } else {
+        setFlashMessage({ type: 'info', text: 'No active Wi-Fi detected on this host.' });
+      }
+    } catch (err) {
+      console.warn('Could not auto-detect Wi-Fi:', err);
+    } finally {
+      setDetectingWifi(false);
+    }
+  };
 
   const [locationLoading, setLocationLoading] = useState(false);
 
@@ -189,9 +228,9 @@ const ProfessorDashboard: React.FC = () => {
   };
 
   const [editSessionForm, setEditSessionForm] = useState<any>({
-    latitude: 40.7128, longitude: -74.0060, wifiSSID: "Campus-WiFi",
+    latitude: 40.7128, longitude: -74.0060, wifiSSID: "",
     allowedRadiusMeters: 50, durationMinutes: 120, requireLocation: true,
-    requireFace: true, requireProfessorVerification: true, requireTAVerification: false
+    requireWifi: true, requireProfessorVerification: true, requireTAVerification: false
   });
 
   const [enrollForm, setEnrollForm] = useState<any>({
@@ -693,11 +732,11 @@ const ProfessorDashboard: React.FC = () => {
         setEditSessionForm({
           latitude: sessionData.latitude ?? 40.7128,
           longitude: sessionData.longitude ?? -74.0060,
-          wifiSSID: sessionData.wifiSSID ?? "Campus-WiFi",
+          wifiSSID: sessionData.wifiSSID ?? "",
           allowedRadiusMeters: sessionData.allowedRadiusMeters ?? 50,
           durationMinutes: durationMinutes,
           requireLocation: sessionData.requireLocation ?? true,
-          requireFace: sessionData.requireFace ?? true,
+          requireWifi: sessionData.requireWifi ?? Boolean(sessionData.wifiSSID),
           requireProfessorVerification: sessionData.requireProfessorVerification ?? true,
           requireTAVerification: sessionData.requireTAVerification ?? false
         });
@@ -1446,14 +1485,30 @@ const ProfessorDashboard: React.FC = () => {
                   />
                 </label>
               </div>
-              <label>
-                Classroom Wi-Fi Network Name (SSID)
+              <div className="form-field">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <label style={{ margin: 0, fontWeight: 600 }}>Classroom Wi-Fi Network Name (SSID)</label>
+                  <button
+                    type="button"
+                    className="btn subtle"
+                    style={{ padding: '2px 8px', fontSize: '0.78rem', height: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}
+                    onClick={fetchCurrentWifiForSession}
+                    disabled={detectingWifi}
+                    title="Auto-fill with currently connected network"
+                  >
+                    <Wifi size={13} />
+                    {detectingWifi ? 'Detecting…' : 'Use Current Wi-Fi'}
+                  </button>
+                </div>
                 <input 
                   value={sessionForm.wifiSSID} 
                   onChange={e=>setSessionForm({...sessionForm, wifiSSID: e.target.value})} 
-                  placeholder="e.g., Campus-WiFi" 
+                  placeholder="e.g., Redmi Note 13 5G or Campus-WiFi" 
                 />
-              </label>
+                <div className="form-hint">
+                  Students will be required to be connected to this network to mark attendance.
+                </div>
+              </div>
               <div className="grid-2">
                 <label>
                   Allowed Radius (meters)
@@ -1480,8 +1535,8 @@ const ProfessorDashboard: React.FC = () => {
                   <span>Require Location Geofencing</span>
                 </label>
                 <label className="checkbox-item">
-                  <input type="checkbox" checked={sessionForm.requireFace} onChange={e=>setSessionForm({...sessionForm, requireFace: e.target.checked})} />
-                  <span>Require Face Verification</span>
+                  <input type="checkbox" checked={sessionForm.requireWifi} onChange={e=>setSessionForm({...sessionForm, requireWifi: e.target.checked})} />
+                  <span>Require Wi-Fi SSID Verification</span>
                 </label>
                 <label className="checkbox-item">
                   <input type="checkbox" checked={sessionForm.requireProfessorVerification} onChange={e=>setSessionForm({...sessionForm, requireProfessorVerification: e.target.checked})} />
@@ -1538,13 +1593,30 @@ const ProfessorDashboard: React.FC = () => {
                       />
                     </label>
                   </div>
-                  <label>
-                    Classroom Wi-Fi Network Name (SSID)
+                  <div className="form-field">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <label style={{ margin: 0, fontWeight: 600 }}>Classroom Wi-Fi Network Name (SSID)</label>
+                      <button
+                        type="button"
+                        className="btn subtle"
+                        style={{ padding: '2px 8px', fontSize: '0.78rem', height: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}
+                        onClick={fetchCurrentWifiForEditSession}
+                        disabled={detectingWifi}
+                        title="Auto-fill with currently connected network"
+                      >
+                        <Wifi size={13} />
+                        {detectingWifi ? 'Detecting…' : 'Use Current Wi-Fi'}
+                      </button>
+                    </div>
                     <input 
                       value={editSessionForm.wifiSSID} 
                       onChange={e=>setEditSessionForm({...editSessionForm, wifiSSID: e.target.value})} 
+                      placeholder="e.g., Redmi Note 13 5G or Campus-WiFi"
                     />
-                  </label>
+                    <div className="form-hint">
+                      Students will be required to be connected to this network to mark attendance.
+                    </div>
+                  </div>
                   <div className="grid-2">
                     <label>
                       Allowed Radius (meters)
@@ -1569,8 +1641,8 @@ const ProfessorDashboard: React.FC = () => {
                       <span>Require Location Geofencing</span>
                     </label>
                     <label className="checkbox-item">
-                      <input type="checkbox" checked={editSessionForm.requireFace} onChange={e=>setEditSessionForm({...editSessionForm, requireFace: e.target.checked})} />
-                      <span>Require Face Verification</span>
+                      <input type="checkbox" checked={editSessionForm.requireWifi} onChange={e=>setEditSessionForm({...editSessionForm, requireWifi: e.target.checked})} />
+                      <span>Require Wi-Fi SSID Verification</span>
                     </label>
                     <label className="checkbox-item">
                       <input type="checkbox" checked={editSessionForm.requireProfessorVerification} onChange={e=>setEditSessionForm({...editSessionForm, requireProfessorVerification: e.target.checked})} />
@@ -1717,12 +1789,16 @@ const ProfessorDashboard: React.FC = () => {
 
               <div className="grid-2">
                 <label>
-                  Major
-                  <input 
+                  Major / Department
+                  <select 
                     value={enrollForm.major} 
-                    onChange={e=>setEnrollForm({...enrollForm, major: e.target.value})} 
-                    placeholder="e.g., Computer Science" 
-                  />
+                    onChange={e=>setEnrollForm({...enrollForm, major: e.target.value})}
+                  >
+                    <option value="">Select Department / Major</option>
+                    {DEPARTMENTS.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
                 </label>
                 <label>
                   Academic Year
@@ -1883,11 +1959,15 @@ const ProfessorDashboard: React.FC = () => {
 
               <label>
                 Department / Faculty
-                <input 
+                <select 
                   value={taForm.department} 
-                  onChange={e=>setTaForm({...taForm, department: e.target.value})} 
-                  placeholder="e.g., Computer Science & Engineering" 
-                />
+                  onChange={e=>setTaForm({...taForm, department: e.target.value})}
+                >
+                  <option value="">Select Department</option>
+                  {DEPARTMENTS.map(dept => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
               </label>
             </div>
             <div className="modal-footer">

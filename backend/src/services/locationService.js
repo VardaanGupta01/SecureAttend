@@ -38,11 +38,11 @@ export function verifyLocation(studentLat, studentLon, studentWifi, session) {
     };
   }
 
-  if (session.wifiSSID) {
-    if (!studentWifi) {
-      return { success: false, message: 'WiFi SSID not provided', errorCode: 'MISSING_WIFI_SSID', metadata: { distance } };
+  if (session.requireWifi || session.wifiSSID) {
+    if (!studentWifi || !studentWifi.trim()) {
+      return { success: false, message: 'Classroom Wi-Fi network not detected. Connect to classroom Wi-Fi.', errorCode: 'MISSING_WIFI_SSID', metadata: { distance } };
     }
-    if (studentWifi !== session.wifiSSID) {
+    if (session.wifiSSID && studentWifi.trim().toLowerCase() !== session.wifiSSID.trim().toLowerCase()) {
       return {
         success: false,
         message: `Wrong WiFi network: '${studentWifi}' (expected: '${session.wifiSSID}')`,
@@ -55,6 +55,6 @@ export function verifyLocation(studentLat, studentLon, studentWifi, session) {
   return {
     success: true,
     message: `Location verified: ${distance.toFixed(1)} meters from classroom`,
-    metadata: { distance, wifiMatched: studentWifi === session.wifiSSID },
+    metadata: { distance, wifiMatched: session.wifiSSID ? studentWifi.trim().toLowerCase() === session.wifiSSID.trim().toLowerCase() : true },
   };
 }

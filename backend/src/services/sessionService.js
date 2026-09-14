@@ -33,7 +33,8 @@ export async function createSession(request) {
     wifiSSID: request.wifiSSID,
     allowedRadiusMeters: request.allowedRadiusMeters ?? 50,
     requireLocation: request.requireLocation ?? true,
-    requireFace: request.requireFace ?? true,
+    requireWifi: request.requireWifi ?? Boolean(request.wifiSSID),
+    requireFace: false,
     requireProfessorVerification: request.requireProfessorVerification ?? true,
     requireTAVerification: request.requireTAVerification ?? true,
     startTime: now,
@@ -130,6 +131,7 @@ export async function updateSession(sessionId, request) {
     session.endTime = new Date(startTime.getTime() + request.durationMinutes * 60 * 1000);
   }
   if (request.requireLocation != null) session.requireLocation = request.requireLocation;
+  if (request.requireWifi != null) session.requireWifi = request.requireWifi;
   if (request.requireFace != null) session.requireFace = request.requireFace;
   if (request.requireProfessorVerification != null) session.requireProfessorVerification = request.requireProfessorVerification;
   if (request.requireTAVerification != null) session.requireTAVerification = request.requireTAVerification;

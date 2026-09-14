@@ -5,6 +5,7 @@ import ProfessorDashboard from './components/ProfessorDashboard';
 import StudentPortal from './components/StudentPortal';
 import TADashboard from './components/TADashboard';
 import api, { API_BASE } from './config/api';
+import { DEPARTMENTS } from './constants/departments';
 
 interface UserData {
   userId: string;
@@ -244,7 +245,22 @@ const Signup: React.FC = () => {
 
           <InputField label="Name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} icon={<User size={18} />} />
           <InputField label="Email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} icon={<Mail size={18} />} />
-          <InputField label="Department" value={form.department} onChange={(v) => setForm({ ...form, department: v })} icon={<School size={18} />} />
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-500"><School size={18} /></span>
+              <select
+                value={form.department}
+                onChange={(e) => setForm({ ...form, department: e.target.value })}
+                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition bg-white text-gray-800 text-sm"
+              >
+                <option value="">Select Department</option>
+                {DEPARTMENTS.map((dept) => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
+              </select>
+            </div>
+          </div>
           <InputField label="Password" type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} icon={<Lock size={18} />} />
 
           <button

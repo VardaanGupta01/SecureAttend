@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense } from "react";
-import { QrCode, MapPin, ScanFace, CheckCircle, TrendingUp, X, Loader2, GraduationCap } from "lucide-react";
+import { QrCode, MapPin, CheckCircle, TrendingUp, X, Loader2, GraduationCap, Wifi, RefreshCw } from "lucide-react";
 import api from '../config/api';
 import DashboardLayout from './layout/DashboardLayout';
 import StatusBadge from './ui/StatusBadge';
@@ -39,8 +39,13 @@ const StudentPortal: React.FC = () => {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [wifiSsid, setWifiSsid] = useState("");
-  const [faceImageBase64, setFaceImageBase64] = useState("");
-  const [livenessPassed, setLivenessPassed] = useState(false);
+  const [isDetectingWifi, setIsDetectingWifi] = useState(false);
+  const [detectedWifiInfo, setDetectedWifiInfo] = useState<{
+    detectedSSID: string;
+    requiredSSID: string | null;
+    wifiRequired: boolean;
+    isMatch: boolean;
+  } | null>(null);
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [currentAttendance, setCurrentAttendance] = useState<Attendance | null>(null);
   const [message, setMessage] = useState<any>(null);
@@ -51,11 +56,39 @@ const StudentPortal: React.FC = () => {
   const [verificationSteps, setVerificationSteps] = useState<string[]>(["QR/Codeword"]);
   const [userProfilePicture, setUserProfilePicture] = useState<string | null>(null);
 
+  const detectWifiNetwork = async (targetSessionId?: string) => {
+    const sId = targetSessionId !== undefined ? targetSessionId : sessionId;
+    setIsDetectingWifi(true);
+    try {
+      const response = await api.get('/student/detect-network', {
+        params: sId ? { sessionId: sId } : {},
+      });
+      const data = response.data?.data || response.data;
+      if (data) {
+        setDetectedWifiInfo(data);
+        if (data.detectedSSID) {
+          setWifiSsid(data.detectedSSID);
+        }
+      }
+    } catch (error) {
+      console.warn('Network auto-detection failed:', error);
+    } finally {
+      setIsDetectingWifi(false);
+    }
+  };
+
   useEffect(() => {
     loadStudentAttendance();
     getCurrentLocation();
     loadUserProfile();
+    detectWifiNetwork();
   }, []);
+
+  useEffect(() => {
+    if (activeStep === 1) {
+      detectWifiNetwork(sessionId);
+    }
+  }, [activeStep, sessionId]);
 
   const loadUserProfile = async () => {
     if (!studentId) return;
@@ -149,45 +182,26 @@ const StudentPortal: React.FC = () => {
   };
 
   const determineRemainingSteps = (attendance: Attendance) => {
-    const steps = ["QR/Codeword"];
-    const nextStepIndex = 1;
-    const currentStep = attendance.currentStep;
-    
-    if (currentStep === "QR_VERIFIED") {
-      steps.push("Location");
-      setActiveStep(nextStepIndex);
-    } else if (currentStep === "LOCATION_VERIFIED") {
-      steps.push("Location");
-      steps.push("Face Recognition");
-      setActiveStep(nextStepIndex + 1);
-    } else if (currentStep === "FACE_VERIFIED" || currentStep === "AWAITING_PROFESSOR") {
-      steps.push("Location");
-      steps.push("Face Recognition");
-      setActiveStep(nextStepIndex + 2);
-      setMessage({ type: "success", text: "All verifications complete! Your attendance has been recorded and is awaiting approval." });
-      setTimeout(() => {
-        setVerificationDialogOpen(false);
-        loadStudentAttendance();
-        resetForm();
-      }, 2000);
-    } else if (currentStep === "COMPLETED") {
-      setMessage({ type: "success", text: "Attendance fully approved!" });
-      setTimeout(() => {
-        setVerificationDialogOpen(false);
-        loadStudentAttendance();
-        resetForm();
-      }, 2000);
-    }
-    
+    const steps = ["QR/Codeword", "Location & Wi-Fi"];
     setVerificationSteps(steps);
+    
+    if (attendance.currentStep === "QR_VERIFIED") {
+      setActiveStep(1);
+    } else if (attendance.currentStep === "LOCATION_VERIFIED" || attendance.currentStep === "AWAITING_PROFESSOR" || attendance.currentStep === "COMPLETED") {
+      setMessage({ type: "success", text: "Attendance recorded and awaiting professor approval." });
+      setTimeout(() => {
+        setVerificationDialogOpen(false);
+        loadStudentAttendance();
+        resetForm();
+      }, 1800);
+    }
   };
 
   const resetForm = () => {
     setSessionId("");
     setQrOrCodeword("");
-    setFaceImageBase64("");
-    setLivenessPassed(false);
     setActiveStep(0);
+    setDetectedWifiInfo(null);
   };
 
   const verifyLocation = async () => {
@@ -199,10 +213,10 @@ const StudentPortal: React.FC = () => {
       setMessage({ type: "error", text: "Location not available" });
       return;
     }
-    if (!wifiSsid.trim()) {
+    if (detectedWifiInfo?.wifiRequired && !wifiSsid.trim()) {
       setMessage({
         type: "error",
-        text: "Enter your Wi-Fi network name (SSID). Browsers cannot detect it automatically — ask your professor for the exact name shown in the session.",
+        text: "Classroom Wi-Fi network not detected. Please ensure Wi-Fi is active and click 'Re-scan'.",
       });
       return;
     }
@@ -213,23 +227,18 @@ const StudentPortal: React.FC = () => {
         attendanceId: currentAttendance.id,
         latitude,
         longitude,
-        wifiSSID: wifiSsid,
+        wifiSSID: wifiSsid.trim() || undefined,
       });
       
       const updated = response.data?.data || response.data;
       setCurrentAttendance(updated);
       
-      if (updated.currentStep === "LOCATION_VERIFIED") {
-        setActiveStep(2);
-        setMessage({ type: "success", text: "Location verified! Proceed to face verification." });
-      } else if (updated.currentStep === "FACE_VERIFIED" || updated.currentStep === "AWAITING_PROFESSOR") {
-        setMessage({ type: "success", text: "All verifications complete! Your attendance has been recorded." });
-        setTimeout(() => {
-          setVerificationDialogOpen(false);
-          loadStudentAttendance();
-          resetForm();
-        }, 2000);
-      }
+      setMessage({ type: "success", text: "Location & Wi-Fi verified! Attendance recorded successfully." });
+      setTimeout(() => {
+        setVerificationDialogOpen(false);
+        loadStudentAttendance();
+        resetForm();
+      }, 1800);
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || "Location verification failed";
       setMessage({ type: "error", text: errorMsg });
@@ -238,56 +247,9 @@ const StudentPortal: React.FC = () => {
     }
   };
 
-  const verifyFace = async () => {
-    if (!currentAttendance) {
-      setMessage({ type: "error", text: "No attendance record found" });
-      return;
-    }
-    if (!faceImageBase64) {
-      setMessage({ type: "error", text: "Please capture your face first" });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await api.post('/student/attendance/verify-face', {
-        attendanceId: currentAttendance.id,
-        faceImageBase64,
-        livenessDetected: livenessPassed,
-      });
-      
-      const updated = response.data?.data || response.data;
-      setCurrentAttendance(updated);
-      
-      if (updated.currentStep === "COMPLETED") {
-        setMessage({ type: "success", text: "Attendance fully approved!" });
-      } else {
-        setMessage({ type: "success", text: "All verifications complete! Awaiting professor approval." });
-      }
-      
-      setTimeout(() => {
-        setVerificationDialogOpen(false);
-        loadStudentAttendance();
-        resetForm();
-      }, 2000);
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.message || "Face verification failed";
-      setMessage({ type: "error", text: errorMsg });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const simulateFaceCapture = () => {
-    setFaceImageBase64("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
-    setLivenessPassed(true);
-    setMessage({ type: "success", text: "Face captured and liveness verified" });
-  };
-
   const proceedToNextStep = () => {
     if (activeStep === 0) initiateAttendance();
     else if (activeStep === 1) verifyLocation();
-    else if (activeStep === 2) verifyFace();
   };
 
   const getStepContent = () => {
@@ -314,41 +276,69 @@ const StudentPortal: React.FC = () => {
               <div><strong>Longitude:</strong> {longitude?.toFixed(6)}</div>
             </div>
             <div className="form-field">
-              <label>Wi-Fi Network Name (SSID)</label>
-              <input className="form-input" value={wifiSsid} onChange={(e) => setWifiSsid(e.target.value)} placeholder="e.g., Campus-WiFi" />
-              <div className="form-hint">Must match exactly what your professor set for this session</div>
-            </div>
-            <button type="button" className="btn primary full" onClick={proceedToNextStep} disabled={loading || !wifiSsid.trim()}>
-              <MapPin size={16} /> {loading ? 'Verifying…' : 'Verify Location'}
-            </button>
-          </div>
-        );
-      case 2:
-        return (
-          <div>
-            <p className="form-hint" style={{ marginBottom: 12 }}>Capture your face for biometric verification.</p>
-            <div className="info-box" style={{ marginBottom: 16, textAlign: 'center' }}>
-              {faceImageBase64 ? (
-                <>
-                  <CheckCircle size={48} color="#059669" style={{ margin: '0 auto' }} />
-                  <p style={{ color: '#059669', marginTop: 8 }}>Face captured successfully</p>
-                </>
-              ) : (
-                <>
-                  <ScanFace size={48} color="#6b7280" style={{ margin: '0 auto' }} />
-                  <p style={{ marginTop: 8 }}>No face captured yet</p>
-                </>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <label style={{ margin: 0, fontWeight: 600 }}>Wi-Fi Network (Auto-Detected)</label>
+                <button
+                  type="button"
+                  className="btn ghost"
+                  style={{ padding: '2px 8px', fontSize: '0.78rem', height: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}
+                  onClick={() => detectWifiNetwork(sessionId)}
+                  disabled={isDetectingWifi}
+                  title="Re-scan connected network"
+                >
+                  <RefreshCw size={12} className={isDetectingWifi ? 'spin' : ''} />
+                  {isDetectingWifi ? 'Detecting…' : 'Re-scan'}
+                </button>
+              </div>
+              <div style={{ position: 'relative' }}>
+                <input
+                  className="form-input"
+                  value={wifiSsid}
+                  readOnly
+                  placeholder={isDetectingWifi ? "Detecting connected Wi-Fi…" : "No Wi-Fi network detected"}
+                  style={{
+                    backgroundColor: 'rgba(243, 244, 246, 0.7)',
+                    cursor: 'not-allowed',
+                    fontWeight: 600,
+                    color: wifiSsid ? 'inherit' : '#9ca3af',
+                  }}
+                />
+                {isDetectingWifi && (
+                  <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)' }}>
+                    <Loader2 size={16} className="spin" color="#2563eb" />
+                  </div>
+                )}
+              </div>
+              {detectedWifiInfo && (
+                <div style={{ marginTop: 6, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {detectedWifiInfo.wifiRequired ? (
+                    detectedWifiInfo.isMatch ? (
+                      <span style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <CheckCircle size={14} /> Network matched: {detectedWifiInfo.requiredSSID}
+                      </span>
+                    ) : (
+                      <span style={{ color: '#dc2626', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <X size={14} /> Connected to &apos;{detectedWifiInfo.detectedSSID}&apos; (Expected: &apos;{detectedWifiInfo.requiredSSID}&apos;)
+                      </span>
+                    )
+                  ) : (
+                    <span style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <CheckCircle size={14} /> Connected: {detectedWifiInfo.detectedSSID} (Auto-detected)
+                    </span>
+                  )}
+                </div>
               )}
-              <button type="button" className="btn ghost" style={{ marginTop: 12 }} onClick={simulateFaceCapture}>
-                Capture Face
-              </button>
-              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 12 }}>
-                <input type="checkbox" checked={livenessPassed} onChange={(e) => setLivenessPassed(e.target.checked)} />
-                Liveness detected
-              </label>
+              <div className="form-hint" style={{ marginTop: 4 }}>
+                SSID is automatically verified from your device interface to prevent bypass spoofing.
+              </div>
             </div>
-            <button type="button" className="btn primary full" onClick={proceedToNextStep} disabled={loading || !faceImageBase64 || !livenessPassed}>
-              <CheckCircle size={16} /> {loading ? 'Verifying…' : 'Complete Verification'}
+            <button
+              type="button"
+              className="btn primary full"
+              onClick={proceedToNextStep}
+              disabled={loading || (detectedWifiInfo?.wifiRequired ? !wifiSsid.trim() : false)}
+            >
+              <CheckCircle size={16} /> {loading ? 'Verifying…' : 'Verify & Mark Attendance'}
             </button>
           </div>
         );
@@ -393,9 +383,33 @@ const StudentPortal: React.FC = () => {
               <div className="form-hint">Scan the QR code or type the codeword shown by professor</div>
             </div>
             <div className="form-field">
-              <label>Wi-Fi Network Name (SSID)</label>
-              <input className="form-input" value={wifiSsid} onChange={(e) => setWifiSsid(e.target.value)} placeholder="e.g., Campus-WiFi" />
-              <div className="form-hint">Required if professor enabled WiFi check — enter the exact network name</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <label style={{ margin: 0 }}>Connected Wi-Fi Network</label>
+                <button
+                  type="button"
+                  className="btn ghost"
+                  style={{ padding: '2px 8px', fontSize: '0.78rem', height: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}
+                  onClick={() => detectWifiNetwork(sessionId)}
+                  disabled={isDetectingWifi}
+                  title="Re-scan connected network"
+                >
+                  <RefreshCw size={12} className={isDetectingWifi ? 'spin' : ''} />
+                  {isDetectingWifi ? 'Scanning…' : 'Scan Network'}
+                </button>
+              </div>
+              <input
+                className="form-input"
+                value={wifiSsid}
+                readOnly
+                placeholder={isDetectingWifi ? "Detecting Wi-Fi…" : "No Wi-Fi detected"}
+                style={{
+                  backgroundColor: 'rgba(243, 244, 246, 0.7)',
+                  cursor: 'not-allowed',
+                  fontWeight: 600,
+                  color: wifiSsid ? 'inherit' : '#9ca3af',
+                }}
+              />
+              <div className="form-hint">Automatically fetched from your connection (read-only for security)</div>
             </div>
             <button type="button" className="btn primary full" style={{ marginBottom: 10 }} onClick={startVerification} disabled={!sessionId || !qrOrCodeword}>
               Start Verification Process
@@ -407,7 +421,7 @@ const StudentPortal: React.FC = () => {
               <div className="info-box-title">Current Location</div>
               <div><strong>Latitude:</strong> {latitude?.toFixed(4)}</div>
               <div><strong>Longitude:</strong> {longitude?.toFixed(4)}</div>
-              <div><strong>Wi-Fi:</strong> {wifiSsid || "Not set"}</div>
+              <div><strong>Wi-Fi:</strong> {wifiSsid ? <span style={{ color: '#059669', fontWeight: 600 }}>{wifiSsid} (Auto-detected)</span> : "Not detected"}</div>
             </div>
           </div>
         </div>

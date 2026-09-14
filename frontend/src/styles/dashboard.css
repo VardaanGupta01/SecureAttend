@@ -718,3 +718,11 @@
   .pa-header { flex-direction: column; align-items: flex-start; }
   .grid-2, .checkbox-grid { grid-template-columns: 1fr; }
 }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
