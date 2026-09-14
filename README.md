@@ -24,12 +24,11 @@ A production-grade, anti-proxy web application engineered to eliminate attendanc
   - Icons: **Lucide React** + **MUI Icons**
   - Camera & Scanner: `react-qr-scanner`, `qrcode.react`
 - **Database**: **MongoDB** (Atlas / Local)
-- **Deployment**: **Docker** + **Render** (`render.yaml`)
+- **Deployment**: **Render** 
 
 ```
 SecureAttend/
 ├── backend/            # Express.js REST API
-│   ├── Dockerfile
 │   ├── package.json
 │   ├── .env.example
 │   └── src/
@@ -46,7 +45,6 @@ SecureAttend/
 │   │   ├── config/     # API Axios client & environment config
 │   │   ├── services/   # Typed API service abstractions
 │   │   └── App.tsx     # Role-based route definitions
-├── render.yaml         # Cloud infrastructure as code
 └── README.md
 ```
 
