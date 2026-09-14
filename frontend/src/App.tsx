@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { School, User, Badge, Mail, Lock, LogOut, Menu as MenuIcon } from 'lucide-react';
+import { School, User, Badge, Mail, Lock } from 'lucide-react';
 import ProfessorDashboard from './components/ProfessorDashboard';
 import StudentPortal from './components/StudentPortal';
 import TADashboard from './components/TADashboard';
@@ -262,44 +262,6 @@ const Signup: React.FC = () => {
           </p>
         </div>
       </div>
-    </div>
-  );
-};
-
-const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-brand-50">
-      <header className="bg-gradient-to-r from-brand-500 to-brand-700 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
-          <School size={28} />
-          <h1 className="text-lg font-bold flex-1">SecureAttend</h1>
-          <span className="text-sm opacity-90 hidden sm:inline">{user?.role}</span>
-          <div className="relative">
-            <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 rounded-lg hover:bg-white/10 transition">
-              <MenuIcon size={22} />
-            </button>
-            {menuOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl text-gray-800 py-2 z-50">
-                <div className="px-4 py-2 border-b">
-                  <p className="font-semibold text-brand-500">{user?.name}</p>
-                  <p className="text-xs text-gray-500">{user?.email}</p>
-                </div>
-                <button
-                  onClick={() => { logout(); navigate('/login'); }}
-                  className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-brand-50 text-sm"
-                >
-                  <LogOut size={16} className="text-brand-500" /> Logout
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
     </div>
   );
 };

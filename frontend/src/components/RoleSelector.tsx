@@ -6,8 +6,7 @@ import {
   Typography, 
   Button, 
   Grid, 
-  Box,
-  Paper 
+  Box
 } from '@mui/material'
 import { 
   School as ProfessorIcon, 

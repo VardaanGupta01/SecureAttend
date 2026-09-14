@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
-  Users, Plus, QrCode, Clock, MapPin, Wifi, CheckCircle, XCircle,
-  RotateCw, UserPlus, Pencil, Trash2, BookOpen, GraduationCap,
+  Users, Plus, QrCode, Clock, MapPin, CheckCircle, XCircle,
+  UserPlus, Trash2, BookOpen, GraduationCap,
   AlertCircle, Eye, Settings, Calendar, TrendingUp, Edit, Camera, User
 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
