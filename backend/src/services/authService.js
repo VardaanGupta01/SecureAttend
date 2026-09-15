@@ -1,10 +1,41 @@
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
+import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import { CourseClass } from '../models/CourseClass.js';
+import { config } from '../config/index.js';
 
-function generateToken(user) {
-  return `TOKEN_${user._id}_${Date.now()}`;
+export function generateToken(user) {
+  const payload = {
+    userId: user._id || user.id || user.userId,
+    name: user.name,
+    role: user.role,
+    email: user.email || '',
+    studentNumber: user.studentNumber || undefined,
+    taId: user.taId || undefined,
+  };
+  return jwt.sign(payload, config.jwt.secret, { expiresIn: config.jwt.expiresIn });
+}
+
+export function getCookieOptions() {
+  const isProduction = process.env.NODE_ENV === 'production';
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+    path: '/',
+  };
+}
+
+export function setAuthCookie(res, token) {
+  res.cookie('token', token, getCookieOptions());
+}
+
+export function clearAuthCookie(res) {
+  const options = getCookieOptions();
+  delete options.maxAge;
+  res.clearCookie('token', options);
 }
 
 function toAuthResponse(user, token) {
@@ -14,6 +45,8 @@ function toAuthResponse(user, token) {
     name: user.name,
     role: user.role,
     email: user.email || '',
+    studentNumber: user.studentNumber || undefined,
+    taId: user.taId || undefined,
   };
 }
 
@@ -130,12 +163,7 @@ export async function taLogin(request) {
   return toAuthResponse(person, token);
 }
 
-export async function validateToken(token) {
-  if (!token || !token.startsWith('TOKEN_')) throw new Error('Invalid token');
-  const parts = token.split('_');
-  if (parts.length < 3) throw new Error('Invalid token format');
-  const userId = parts[1];
-  const user = await User.findById(userId);
-  if (!user) throw new Error('User not found');
-  return user;
+export function verifyToken(token) {
+  if (!token) throw new Error('Token required');
+  return jwt.verify(token, config.jwt.secret);
 }

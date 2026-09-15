@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { School, User, Badge, Mail, Lock } from 'lucide-react';
 import ProfessorDashboard from './components/ProfessorDashboard';
@@ -6,64 +6,24 @@ import StudentPortal from './components/StudentPortal';
 import TADashboard from './components/TADashboard';
 import api, { API_BASE } from './config/api';
 import { DEPARTMENTS } from './constants/departments';
-
-interface UserData {
-  userId: string;
-  name: string;
-  role: 'PROFESSOR' | 'STUDENT' | 'TA';
-  email: string;
-  token: string;
-}
-
-interface AuthContextType {
-  user: UserData | null;
-  login: (userData: UserData) => void;
-  logout: () => void;
-  isAuthenticated: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserData | null>(() => {
-    try {
-      const stored = localStorage.getItem('user');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
-
-  const login = (userData: UserData) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be within AuthProvider');
-  return ctx;
-};
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string[] }> = ({
   children,
   allowedRoles,
 }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-brand-500"></div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (!allowedRoles.includes(user!.role)) return <Navigate to="/unauthorized" replace />;
+  if (!user || !allowedRoles.includes(user.role)) return <Navigate to="/unauthorized" replace />;
   return <>{children}</>;
 };
 

@@ -11,6 +11,7 @@ export const API_BASE = rawBase.endsWith('/api') ? rawBase : `${rawBase}/api`;
 export const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
   timeout: 90000, // Render free tier can take ~60s to wake up
 });
 

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { success, error as errorResponse } from '../utils/apiResponse.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
+import { authenticate } from '../middleware/auth.js';
 import * as authService from '../services/authService.js';
 import * as classService from '../services/classService.js';
 
@@ -9,13 +10,38 @@ const router = Router();
 function authHandler(fn, errorCode) {
   return async (req, res, next) => {
     try {
-      const result = await fn(req);
+      const result = await fn(req, res);
+      if (result?.data?.token) {
+        authService.setAuthCookie(res, result.data.token);
+      }
       res.json(result);
     } catch (e) {
       res.status(400).json(errorResponse(e.message, errorCode));
     }
   };
 }
+
+/**
+ * Restore/verify current user session from HttpOnly cookie or Bearer token
+ */
+router.get(
+  '/me',
+  authenticate,
+  (req, res) => {
+    res.json(success(req.user, 'Current user profile retrieved'));
+  }
+);
+
+/**
+ * Logout and clear HttpOnly cookie
+ */
+router.post(
+  '/logout',
+  (req, res) => {
+    authService.clearAuthCookie(res);
+    res.json(success(null, 'Logged out successfully'));
+  }
+);
 
 router.post(
   '/professor/signup',

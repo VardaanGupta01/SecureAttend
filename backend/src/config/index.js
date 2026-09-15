@@ -20,4 +20,8 @@ export const config = {
   session: {
     qrExpiryMinutes: parseInt(process.env.SESSION_QR_EXPIRY_MINUTES || '30', 10),
   },
+  jwt: {
+    secret: process.env.JWT_SECRET || 'secureattend_jwt_super_secret_key_2026',
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  },
 };

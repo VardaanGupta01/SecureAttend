@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 import { config } from './config/index.js';
 import { authRouter, classRouter } from './routes/auth.js';
@@ -15,19 +16,21 @@ const app = express();
 // Trust reverse proxy headers (Render, Cloudflare, etc.) to get real client IP
 app.set('trust proxy', true);
 
-// Allow browser requests from Vercel/local dev (reflect request origin)
+// Allow browser requests with credentials (cookies) from allowed origins
 app.use(
   cors({
     origin: config.corsOrigins === '*' ? true : (origin, callback) => {
       if (!origin) return callback(null, true);
       if (config.corsOrigins.includes(origin)) return callback(null, true);
-      // Allow Vercel preview/production URLs automatically
+      // Allow Vercel/Render preview/production URLs automatically
       if (/^https:\/\/[\w-]+\.vercel\.app$/i.test(origin)) return callback(null, true);
+      if (/^https:\/\/[\w-]+\.onrender\.com$/i.test(origin)) return callback(null, true);
       callback(null, true); // permissive for deployment; set CORS_ORIGINS to restrict
     },
     credentials: true,
   })
 );
+app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -74,3 +77,5 @@ async function start() {
 }
 
 start();
+
+export { app };

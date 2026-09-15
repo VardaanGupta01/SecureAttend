@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle, LogOut, XCircle } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface DashboardLayoutProps {
   title: string;
@@ -26,10 +27,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
 }) => {
   const navigate = useNavigate();
+  const { logout: authLogout } = useAuth();
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    navigate('/login');
+  const logout = async () => {
+    try {
+      await authLogout();
+    } finally {
+      navigate('/login');
+    }
   };
 
   return (
